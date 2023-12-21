@@ -24907,10 +24907,7 @@ function validatePullRequest(pull_request, config) {
   core.info(
     `Check package '${config.metadata.dependecyNames}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
   )
-  core.info(
-    `Target type: ${targetUpdateType} - Update type: ${config.metadata.updateType}`
-  )
-  core.info(`Is the version treated? - ${treatVersion}`)
+  core.info(`Is the package version treated? - ${treatVersion}`)
   if (!treatVersion) {
     return {
       execute: false,
@@ -24920,9 +24917,6 @@ function validatePullRequest(pull_request, config) {
     }
   }
 
-  core.info(
-    `Mergeable: ${pull_request.mergeable} Rebaseable: ${pull_request.rebaseable}`
-  )
   if (pull_request.mergeable === false) {
     if (pull_request.rebaseable) {
       return {
@@ -24947,7 +24941,7 @@ function validatePullRequest(pull_request, config) {
     return {
       execute: true,
       body: 'Approved by DependaMerge.',
-      cmd: approvePullRequest,
+      cmd: addComment,
       validationState: state.approved,
       validationMessage: 'Pull request is approved.'
     }
@@ -24956,7 +24950,7 @@ function validatePullRequest(pull_request, config) {
   return {
     execute: true,
     body: `@dependabot ${config.inputs.commandMethod}`,
-    cmd: approvePullRequest,
+    cmd: addComment,
     validationState: state.merged,
     validationMessage: 'Pull request is merged.'
   }
