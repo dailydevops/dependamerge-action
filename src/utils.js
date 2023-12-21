@@ -63,7 +63,7 @@ export function getInputs(inputs) {
 export function getMetadata(metadata) {
   if (metadata === undefined || metadata === null) {
     return {
-      dependecyName: '',
+      dependecyNames: '',
       dependecyType: '',
       updateType: '',
       ecosystem: '',
@@ -80,7 +80,7 @@ export function getMetadata(metadata) {
   }
 
   return {
-    dependecyName: metadata['dependency-name'],
+    dependecyNames: metadata['dependency-names'],
     dependecyType: metadata['dependency-type'],
     updateType: metadata['update-type'],
     ecosystem: metadata['package-ecosystem'],
@@ -142,15 +142,19 @@ export function validatePullRequest(pull_request, config) {
     }
   }
 
-  const smallerOrEqualUpdateType =
-    updateTypesPriority.indexOf(targetUpdateType) >=
-    updateTypesPriority.indexOf(config.metadata.updateType)
+  const treatVersion =
+    targetUpdateType === updateTypes.any ||
+    updateTypesPriority.indexOf(config.metadata.updateType) <
+      updateTypesPriority.indexOf(targetUpdateType)
 
   core.info(
-    `Check package '${config.metadata.dependecyName}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
+    `Check package '${config.metadata.dependecyNames}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
   )
-  core.info(`Is the version treated? - ${smallerOrEqualUpdateType}`)
-  if (smallerOrEqualUpdateType) {
+  core.info(
+    `Target update type: ${targetUpdateType} - Update type: ${config.metadata.updateType}`
+  )
+  core.info(`Is the version treated? - ${treatVersion}`)
+  if (treatVersion) {
     return {
       execute: false,
       validationState: state.skipped,
