@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   test-javascript:
@@ -54,7 +55,7 @@ jobs:
       - name: Run DependaMerge
         uses: ./
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          submodule: true
+          token: ${{ secrets.DEPENDABOT }}
+          handle-submodule: true
 
 

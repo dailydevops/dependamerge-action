@@ -1,7 +1,9 @@
 import * as core from '@actions/core'
-import * as gh from '@actions/github'
 
-import { logInfo, logDebug, logWarning } from './log'
+import { getInputs, getMetadata, state, validatePullRequest } from './utils'
+
+const outputState = 'state'
+const outputMessage = 'message'
 
 /**
  * The main function for the action.
@@ -9,29 +11,28 @@ import { logInfo, logDebug, logWarning } from './log'
  */
 export default async function run({ github, context, inputs, metadata }) {
   try {
-    logInfo('gh:')
-    logInfo(JSON.stringify(github))
-    logInfo('context:')
-    logInfo(JSON.stringify(context))
-    logInfo('inputs:')
-    logInfo(JSON.stringify(inputs))
-
-    if (metadata !== undefined) {
-      logInfo('metadata:')
-      logInfo(JSON.stringify(metadata))
+    const config = {
+      inputs: getInputs(inputs),
+      metadata: getMetadata(metadata)
     }
 
     // init octokit
-    // const octokit = gh.getOctokit(inputs.token)
-    const pull_request = context.payload.pull_request
-    const repo = context.payload.repository
+    const { pull_request, repository } = context.payload
 
-    logInfo('pull_request:')
-    logInfo(JSON.stringify(pull_request))
-    logInfo('repo:')
-    logInfo(JSON.stringify(repo))
+    const { execute, cmd, body, validationState, validationMessage } =
+      validatePullRequest(pull_request, config)
+
+    core.setOutput(outputState, validationState)
+    core.setOutput(outputMessage, validationMessage)
+    if (execute) {
+      await cmd(github, repository, pull_request, body)
+      return core.info(validationMessage)
+    } else {
+      return core.warning(validationMessage)
+    }
   } catch (error) {
-    // Fail the workflow run if an error occurs
+    core.setOutput(outputState, state.failed)
+    core.setOutput(outputMessage, error.message)
     core.setFailed(error.message)
   }
 }

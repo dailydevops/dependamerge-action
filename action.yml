@@ -11,11 +11,6 @@ inputs:
     description: 'The GitHub token used to merge the pull-request'
     required: true
 
-  approve:
-    description: 'Approve the pull-request before merging. Valid values: true or false - Default: true'
-    required: false
-    default: true
-
   approve-only:
     description: 'Only approve the pull-request. Valid values: true or false - Default: false'
     required: false
@@ -26,10 +21,15 @@ inputs:
     required: false
     default: squash
 
-  submodule:
+  handle-submodule:
     description: 'If true, the action will merge pull-requests with submodule updates. Valid values: true or false - Default: false'
     required: false
     default: false
+
+  handle-dependency-group:
+    description: 'If true, the action will merge dependency group pull-requests. Valid values: true or false - Default: false'
+    required: false
+    default: true
   
   target:
     description: 'The version comparision target. Valid values: major, minor or patch - Default: minor'
@@ -47,9 +47,13 @@ inputs:
     default: false
 
 # Define your outputs here.
-# outputs:
-#   time:
-#     description: 'Your output description here'
+outputs:
+  state:
+    description: 'The state of the pull-request after the action has completed.'
+    value: ${{ steps.dependamerge.outputs.state }}
+  message:
+    description: 'More information about the state of the pull-request after the action has completed.'
+    value: ${{ steps.dependamerge.outputs.message }}
 
 runs:
   using: composite
@@ -57,8 +61,11 @@ runs:
     - name: Fetch metadata
       id: metadata
       uses: dependabot/fetch-metadata@v1.6.0
-      if: github.event_name == 'pull_request' && (github.actor == 'dependabot[bot]')
+      if: github.event_name == 'pull_request' && (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]' || inputs.skip-verification)
       with:
+        github-token: ${{ inputs.token }}
+        alert-lookup: true
+        compat-lookup: true
         skip-commit-verification: ${{ inputs.skip-commit-verification }}
         skip-verification :  ${{ inputs.skip-verification }}
 
@@ -73,5 +80,5 @@ runs:
             github,
             context,
             inputs: ${{ toJSON(inputs) }},
-            metadata: ${{ toJSON(steps.dependabot-metadata.outputs) }},
+            metadata: ${{ toJSON(steps.metadata.outputs) }},
           })
