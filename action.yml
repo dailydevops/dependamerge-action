@@ -11,11 +11,6 @@ inputs:
     description: 'The GitHub token used to merge the pull-request'
     required: true
 
-  approve:
-    description: 'Approve the pull-request before merging. Valid values: true or false - Default: true'
-    required: false
-    default: true
-
   approve-only:
     description: 'Only approve the pull-request. Valid values: true or false - Default: false'
     required: false
@@ -47,9 +42,13 @@ inputs:
     default: false
 
 # Define your outputs here.
-# outputs:
-#   time:
-#     description: 'Your output description here'
+outputs:
+  state:
+    description: 'The state of the pull-request after the action has completed.'
+    value: ${{ steps.dependamerge.outputs.state }}
+  message:
+    description: 'More information about the state of the pull-request after the action has completed.'
+    value: ${{ steps.dependamerge.outputs.message }}
 
 runs:
   using: composite
