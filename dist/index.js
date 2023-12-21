@@ -24987,6 +24987,7 @@ async function run({ github, context, inputs, metadata }) {
     core.setOutput(outputMessage, validationMessage)
     if (execute) {
       await cmd(github, repository, pull_request, body)
+      return core.info(validationMessage)
     } else {
       return core.warning(validationMessage)
     }
