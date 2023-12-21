@@ -1,19 +1,75 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'DependaMerge'
+description: 'Automatic validation, approval and merging of pull requests, created and processed by dependabot[bot]'
+author: 'Daily DevOps & .NET'
+branding:
+  icon: 'package'
+  color: 'purple'
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  github-token:
+    description: 'The GitHub token used to merge the pull-request'
     required: true
-    default: '1000'
+
+  approve:
+    description: 'Approve the pull-request before merging. Valid values: true or false - Default: true'
+    required: false
+    default: true
+
+  approve-only:
+    description: 'Only approve the pull-request. Valid values: true or false - Default: false'
+    required: false
+    default: false
+
+  command:
+    description: 'The command to pass to Dependabot. Valid values: merge or squash - Default: squash'
+    required: false
+    default: squash
+
+  submodule:
+    description: 'If true, the action will merge pull-requests with submodule updates. Valid values: true or false - Default: false'
+    required: false
+    default: false
+  
+  target:
+    description: 'The version comparision target. Valid values: major, minor or patch - Default: minor'
+    required: false
+    default: minor
+
+  skip-commit-verification:
+    description: 'If true, then the action will not expect the commits to have a verification signature. It is required to set this to true in GitHub Enterprise Server'
+    required: false
+    default: false
+    
+  skip-verification:
+    type: boolean
+    description: 'If true, the action will not validate the user or the commit verification status'
+    default: false
 
 # Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+# outputs:
+#   time:
+#     description: 'Your output description here'
 
 runs:
-  using: node20
-  main: dist/index.js
+  using: composite
+  steps:
+    - name: Fetch metadata
+      id: metadata
+      uses: dependabot/fetch-metadata@v1.6.0
+      if: github.event_name == 'pull_request' && (github.actor == 'dependabot[bot]')
+      with:
+        skip-commit-verification: ${{ inputs.skip-commit-verification }}
+        skip-verification :  ${{ inputs.skip-verification }}
+
+    - name: DependaMerge
+      id: dependamerge
+      uses: actions/github-script@v7.0.1
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const script = require('${{ github.action_path }}/dist/index.js')
+          await script({
+            inputs: ${{ toJSON(inputs) }},
+            metadata: ${{ toJSON(steps.dependabot-metadata.outputs) }},
+          })

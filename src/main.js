@@ -1,24 +1,28 @@
 const core = require('@actions/core')
-const { wait } = require('./wait')
+const github = require('@actions/github')
+
+const { logInfo, logDebug, logWarning } = require('./log')
 
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-async function run() {
+async function run({ inputs, metadata }) {
   try {
-    const ms = core.getInput('milliseconds', { required: true })
+    // extract the title
+    const {
+      repo,
+      payload: { pull_request }
+    } = github.context // eslint-disable-line camelcase
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    // init octokit
+    const octokit = github.getOctokit(inputs.token)
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    logInfo(repo)
+    logInfo(pull_request)
+    logInfo(inputs)
+    logInfo(metadata)
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
   } catch (error) {
     // Fail the workflow run if an error occurs
     core.setFailed(error.message)
