@@ -57,7 +57,7 @@ runs:
     - name: Fetch metadata
       id: metadata
       uses: dependabot/fetch-metadata@v1.6.0
-      if: github.event_name == 'pull_request' && (github.actor == 'dependabot[bot]')
+      # if: github.event_name == 'pull_request' && (github.actor == 'dependabot[bot]')
       with:
         skip-commit-verification: ${{ inputs.skip-commit-verification }}
         skip-verification :  ${{ inputs.skip-verification }}
@@ -71,7 +71,7 @@ runs:
           const script = require('${{ github.action_path }}dist/index.js')
           await script({
             github,
-            context
+            context,
             inputs: ${{ toJSON(inputs) }},
             metadata: ${{ toJSON(steps.dependabot-metadata.outputs) }},
           })
