@@ -188,7 +188,7 @@ export function validatePullRequest(pull_request, config) {
     return {
       execute: true,
       body: 'Approved by DependaMerge.',
-      cmd: cmd.addComment,
+      cmd: cmd.approvePullRequest,
       validationState: state.approved,
       validationMessage: 'Pull request is approved.'
     }
@@ -197,7 +197,7 @@ export function validatePullRequest(pull_request, config) {
   return {
     execute: true,
     body: `@dependabot ${config.inputs.commandMethod}`,
-    cmd: cmd.addComment,
+    cmd: cmd.approvePullRequest,
     validationState: state.merged,
     validationMessage: 'Pull request is merged.'
   }
