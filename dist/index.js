@@ -24895,7 +24895,7 @@ function validatePullRequest(pull_request, config) {
 
   const smallerOrEqualUpdateType =
     updateTypesPriority.indexOf(targetUpdateType) >=
-    updateTypesPriority.indexOf(config.meta.updateType)
+    updateTypesPriority.indexOf(config.metadata.updateType)
 
   if (!smallerOrEqualUpdateType) {
     return {
