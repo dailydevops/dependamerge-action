@@ -22,7 +22,6 @@ async function run({ inputs, metadata }) {
     logInfo(pull_request)
     logInfo(inputs)
     logInfo(metadata)
-
   } catch (error) {
     // Fail the workflow run if an error occurs
     core.setFailed(error.message)
