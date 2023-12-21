@@ -28962,7 +28962,7 @@ const { logInfo, logDebug, logWarning } = __nccwpck_require__(653)
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-async function run({ inputs, metadata }) {
+module.exports = async function run({ inputs, metadata }) {
   try {
     // extract the title
     const {
@@ -28981,10 +28981,6 @@ async function run({ inputs, metadata }) {
     // Fail the workflow run if an error occurs
     core.setFailed(error.message)
   }
-}
-
-module.exports = {
-  run
 }
 
 
