@@ -73,5 +73,5 @@ runs:
             github,
             context,
             inputs: ${{ toJSON(inputs) }},
-            metadata: ${{ toJSON(steps.dependabot-metadata.outputs) }},
+            metadata: ${{ toJSON(steps.metadata.outputs) }},
           })
