@@ -24911,7 +24911,7 @@ function validatePullRequest(pull_request, config) {
     `Target type: ${targetUpdateType} - Update type: ${config.metadata.updateType}`
   )
   core.info(`Is the version treated? - ${treatVersion}`)
-  if (treatVersion) {
+  if (!treatVersion) {
     return {
       execute: false,
       validationState: state.skipped,
