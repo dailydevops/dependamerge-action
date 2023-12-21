@@ -1,5 +1,7 @@
 'use strict'
 
+import * as core from '@actions/core'
+
 import * as cmd from './api'
 
 const dependabotUser = 'dependabot[bot]'
@@ -144,6 +146,10 @@ export function validatePullRequest(pull_request, config) {
     updateTypesPriority.indexOf(targetUpdateType) >=
     updateTypesPriority.indexOf(config.metadata.updateType)
 
+  core.info(
+    `Check package '${config.metadata.dependecyName}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
+  )
+  core.info(`Is the version treated? - ${smallerOrEqualUpdateType}`)
   if (smallerOrEqualUpdateType) {
     return {
       execute: false,
@@ -153,6 +159,9 @@ export function validatePullRequest(pull_request, config) {
     }
   }
 
+  core.info(
+    `Mergeable: ${pull_request.mergeable} Rebaseable: ${pull_request.rebaseable}`
+  )
   if (pull_request.mergeable === false) {
     if (pull_request.rebaseable) {
       return {
