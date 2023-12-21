@@ -21,10 +21,15 @@ inputs:
     required: false
     default: squash
 
-  submodule:
+  handle-submodule:
     description: 'If true, the action will merge pull-requests with submodule updates. Valid values: true or false - Default: false'
     required: false
     default: false
+
+  handle-dependency-group:
+    description: 'If true, the action will merge dependency group pull-requests. Valid values: true or false - Default: false'
+    required: false
+    default: true
   
   target:
     description: 'The version comparision target. Valid values: major, minor or patch - Default: minor'
