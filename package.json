@@ -1,16 +1,16 @@
 {
-  "name": "javascript-action",
-  "description": "GitHub Actions JavaScript Template",
+  "name": "dependamerge-action",
+  "description": "GitHub action that automatically validates, approves and merges pull requests for branches created by dependabot[bot].",
   "version": "0.0.0",
-  "author": "",
+  "author": "dailydevops",
   "private": true,
-  "homepage": "https://github.com/actions/javascript-action#readme",
+  "homepage": "https://github.com/dailydevops/dependamerge-action#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/javascript-action.git"
+    "url": "git+https://github.com/dailydevops/dependamerge-action.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/javascript-action/issues"
+    "url": "https://github.com/dailydevops/dependamerge-action/issues"
   },
   "keywords": [
     "GitHub",
