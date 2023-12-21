@@ -56,6 +56,6 @@ jobs:
         uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          submodule: true
+          handle-submodule: true
 
 
