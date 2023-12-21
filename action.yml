@@ -7,7 +7,7 @@ branding:
 
 # Define your inputs here.
 inputs:
-  github-token:
+  token:
     description: 'The GitHub token used to merge the pull-request'
     required: true
 
@@ -66,7 +66,7 @@ runs:
       id: dependamerge
       uses: actions/github-script@v7.0.1
       with:
-        github-token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.token }}
         script: |
           const script = require('${{ github.action_path }}dist/index.js')
           await script({

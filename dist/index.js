@@ -28915,25 +28915,28 @@ function wrappy (fn, cb) {
 /**
  * The entrypoint for the action.
  */
-const run = __nccwpck_require__(1713)
+const run = (__nccwpck_require__(3489)/* ["default"] */ .Z)
 
 module.exports = run
 
 
 /***/ }),
 
-/***/ 653:
+/***/ 3489:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "logDebug": () => (/* binding */ logDebug),
-/* harmony export */   "logInfo": () => (/* binding */ logInfo),
-/* harmony export */   "logWarning": () => (/* binding */ logWarning)
-/* harmony export */ });
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2186);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "Z": () => (/* binding */ run)
+});
+
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(2186);
+// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
+var github = __nccwpck_require__(5438);
+;// CONCATENATED MODULE: ./src/log.js
 
 
 ;
@@ -28943,41 +28946,43 @@ const stringify = msg =>
 
 const log = logger => message => logger(stringify(message))
 
-const logDebug = log(_actions_core__WEBPACK_IMPORTED_MODULE_0__.debug)
-const logInfo = log(_actions_core__WEBPACK_IMPORTED_MODULE_0__.info)
-const logWarning = log(_actions_core__WEBPACK_IMPORTED_MODULE_0__.warning)
+const logDebug = log(core.debug)
+const logInfo = log(core.info)
+const logWarning = log(core.warning)
+
+;// CONCATENATED MODULE: ./src/main.js
 
 
-/***/ }),
 
-/***/ 1713:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const core = __nccwpck_require__(2186)
-const github = __nccwpck_require__(5438)
-
-const { logInfo, logDebug, logWarning } = __nccwpck_require__(653)
 
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-module.exports = async function run({ _, context, inputs, metadata }) {
+async function run({ github, context, inputs, metadata }) {
   try {
-    logInfo('context: ', JSON.stringify(context))
-    logInfo('inputs: ', JSON.stringify(inputs))
+    logInfo('gh:')
+    logInfo(JSON.stringify(github))
+    logInfo('context:')
+    logInfo(JSON.stringify(context))
+    logInfo('inputs:')
+    logInfo(JSON.stringify(inputs))
 
     if (metadata !== undefined) {
-      logInfo('metadata: ', JSON.stringify(metadata))
+      logInfo('metadata:')
+      logInfo(JSON.stringify(metadata))
     }
 
     // init octokit
-    const octokit = github.getOctokit(inputs.githubToken)
+    // const octokit = gh.getOctokit(inputs.token)
     const pull_request = context.payload.pull_request
     const repo = context.payload.repository
 
-    logInfo('pull_request: ', JSON.stringify(pull_request))
-    logInfo('repo: ', JSON.stringify(repo))
+    logInfo('pull_request:')
+    logInfo(JSON.stringify(pull_request))
+    logInfo('repo:')
+    logInfo(JSON.stringify(repo))
   } catch (error) {
     // Fail the workflow run if an error occurs
     core.setFailed(error.message)
@@ -30863,18 +30868,6 @@ module.exports = parseParams
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -30890,17 +30883,6 @@ module.exports = parseParams
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/compat */
