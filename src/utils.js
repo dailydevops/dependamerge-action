@@ -40,6 +40,10 @@ export const updateTypes = {
   any: 'version-update:semver-any'
 }
 
+const mapUpdateType = input => {
+  return updateTypes[input] || updateTypes.any
+}
+
 export const updateTypesPriority = [
   updateTypes.patch,
   updateTypes.minor,
@@ -54,7 +58,7 @@ export function getInputs(inputs) {
     commandMethod: getCommand(inputs),
     handleSubmodule: inputs['handle-submodule'] === 'true',
     handleDependencyGroup: inputs['handle-dependency-group'] === 'true',
-    target: inputs['target'],
+    target: mapUpdateType(inputs['target']),
     skipCommitVerification: inputs['skip-commit-verification'],
     skipVerification: inputs['skip-verification']
   }
@@ -151,7 +155,7 @@ export function validatePullRequest(pull_request, config) {
     `Check package '${config.metadata.dependecyNames}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
   )
   core.info(
-    `Target update type: ${targetUpdateType} - Update type: ${config.metadata.updateType}`
+    `Target type: ${targetUpdateType} - Update type: ${config.metadata.updateType}`
   )
   core.info(`Is the version treated? - ${treatVersion}`)
   if (treatVersion) {
