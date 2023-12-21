@@ -24897,7 +24897,7 @@ function validatePullRequest(pull_request, config) {
     updateTypesPriority.indexOf(targetUpdateType) >=
     updateTypesPriority.indexOf(config.metadata.updateType)
 
-  if (!smallerOrEqualUpdateType) {
+  if (smallerOrEqualUpdateType) {
     return {
       execute: false,
       validationState: state.skipped,
