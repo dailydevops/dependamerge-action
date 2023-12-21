@@ -68,7 +68,7 @@ runs:
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const script = require('${{ github.action_path }}/dist/index.js')
+          const script = require('${{ github.action_path }}dist/index.js')
           await script({
             inputs: ${{ toJSON(inputs) }},
             metadata: ${{ toJSON(steps.dependabot-metadata.outputs) }},
