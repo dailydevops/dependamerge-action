@@ -24759,22 +24759,13 @@ const { logInfo, logDebug, logWarning } = __nccwpck_require__(653)
  */
 module.exports = async function run({ github, context, inputs, metadata }) {
   try {
-    // extract the title
-    const {
-      repo,
-      payload: { pull_request }
-    } = github.context // eslint-disable-line camelcase
+    logInfo(github)
+    logInfo(context)
+    logInfo(inputs)
+    logInfo(metadata)
 
     // init octokit
     const octokit = github.getOctokit(inputs.token)
-
-    logInfo(github)
-    logInfo(context)
-
-    logInfo(repo)
-    logInfo(pull_request)
-    logInfo(inputs)
-    logInfo(metadata)
   } catch (error) {
     // Fail the workflow run if an error occurs
     core.setFailed(error.message)
