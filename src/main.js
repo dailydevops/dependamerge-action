@@ -8,10 +8,13 @@ const { logInfo, logDebug, logWarning } = require('./log')
  */
 module.exports = async function run({ github, context, inputs, metadata }) {
   try {
-    logInfo(github)
-    logInfo(context)
-    logInfo(inputs)
-    logInfo(metadata)
+    logInfo(JSON.stringify(github))
+    logInfo(JSON.stringify(context))
+    logInfo(JSON.stringify(inputs))
+
+    if (metadata !== undefined) {
+      logInfo(JSON.stringify(metadata))
+    }
 
     // init octokit
     const octokit = github.getOctokit(inputs.token)
