@@ -59,6 +59,9 @@ runs:
       uses: dependabot/fetch-metadata@v1.6.0
       if: github.event_name == 'pull_request' && (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]')
       with:
+        github-token: ${{ inputs.token }}
+        alert-lookup: true
+        compat-lookup: true
         skip-commit-verification: ${{ inputs.skip-commit-verification }}
         skip-verification :  ${{ inputs.skip-verification }}
 

@@ -28935,7 +28935,7 @@ __nccwpck_require__.d(__webpack_exports__, {
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(2186);
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
-var github = __nccwpck_require__(5438);
+var lib_github = __nccwpck_require__(5438);
 ;// CONCATENATED MODULE: ./src/log.js
 
 
@@ -28950,11 +28950,17 @@ const logDebug = log(core.debug)
 const logInfo = log(core.info)
 const logWarning = log(core.warning)
 
+// EXTERNAL MODULE: ./src/utils.js
+var utils = __nccwpck_require__(1608);
 ;// CONCATENATED MODULE: ./src/main.js
 
 
 
 
+
+
+const dependabotUser = 'dependabot[bot]'
+const dependabotCommitter = 'GitHub'
 
 /**
  * The main function for the action.
@@ -28962,29 +28968,107 @@ const logWarning = log(core.warning)
  */
 async function run({ github, context, inputs, metadata }) {
   try {
-    logInfo('inputs:')
-    logInfo(JSON.stringify(inputs))
+    const {
+      token,
+      submodule,
+      approve,
+      approveOnly,
+      command,
+      target,
+      skipCommitVerification,
+      skipVerification
+    } = (0,utils/* getInputs */.G)(inputs)
 
-    if (metadata !== undefined && metadata !== null) {
-      logInfo('metadata:')
-      logInfo(JSON.stringify(metadata))
-
-      logInfo(metadata.previousVersion)
-      logInfo(metadata.newVersion)
-    }
+    const {
+      dependecyName,
+      dependecyType,
+      updateType,
+      ecosystem,
+      targetBranch,
+      previousVersion,
+      newVersion,
+      compatibilityScore,
+      maintainerChanges,
+      dependecyGroup,
+      alertState,
+      ghsaId,
+      cvss
+    } = (0,utils/* getMetadata */.s)(metadata)
 
     // init octokit
-    // const octokit = gh.getOctokit(inputs.token)
-    const pull_request = context.payload.pull_request
-    const repo = context.payload.repository
-
-    logInfo('pull_request:')
-    logInfo(JSON.stringify(pull_request))
-    logInfo('repo:')
-    logInfo(JSON.stringify(repo))
+    const octokit = lib_github.getOctokit(inputs.token)
+    const { pull_request, repo: repository } = context.payload
   } catch (error) {
     // Fail the workflow run if an error occurs
     core.setFailed(error.message)
+  }
+}
+
+
+/***/ }),
+
+/***/ 1608:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+const getCommand = inputs => {
+  const command = inputs['command']
+
+  if (command === 'merge') {
+    return 'merge'
+  }
+
+  return 'squash'
+}
+
+exports.G = inputs => {
+  return {
+    token: inputs['token'],
+    submodule: inputs['submodule'],
+    approve: inputs['approve'],
+    approveOnly: inputs['approve-only'],
+    command: getCommand(inputs),
+    target: inputs['target'],
+    skipCommitVerification: inputs['skip-commit-verification'],
+    skipVerification: inputs['skip-verification']
+  }
+}
+
+exports.s = metadata => {
+  if (metadata === undefined || metadata === null) {
+    return {
+      dependecyName: '',
+      dependecyType: '',
+      updateType: '',
+      ecosystem: '',
+      targetBranch: '',
+      previousVersion: '',
+      newVersion: '',
+      compatibilityScore: '',
+      maintainerChanges: '',
+      dependecyGroup: '',
+      alertState: '',
+      ghsaId: '',
+      cvss: ''
+    }
+  }
+
+  return {
+    dependecyName: metadata['dependency-name'],
+    dependecyType: metadata['dependency-type'],
+    updateType: metadata['update-type'],
+    ecosystem: metadata['package-ecosystem'],
+    targetBranch: metadata['target-branch'],
+    previousVersion: metadata['previous-version'],
+    newVersion: metadata['new-version'],
+    compatibilityScore: metadata['compatibility-score'],
+    maintainerChanges: metadata['maintainer-changes'],
+    dependecyGroup: metadata['dependency-group'],
+    alertState: metadata['alert-state'],
+    ghsaId: metadata['ghsa-id'],
+    cvss: metadata['cvss']
   }
 }
 
