@@ -9,16 +9,15 @@ import { logInfo, logDebug, logWarning } from './log'
  */
 export default async function run({ github, context, inputs, metadata }) {
   try {
-    logInfo('gh:')
-    logInfo(JSON.stringify(github))
-    logInfo('context:')
-    logInfo(JSON.stringify(context))
     logInfo('inputs:')
     logInfo(JSON.stringify(inputs))
 
-    if (metadata !== undefined) {
+    if (metadata !== undefined && metadata !== null) {
       logInfo('metadata:')
       logInfo(JSON.stringify(metadata))
+
+      logInfo(metadata.previousVersion)
+      logInfo(metadata.newVersion)
     }
 
     // init octokit

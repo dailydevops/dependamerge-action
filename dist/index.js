@@ -558,7 +558,7 @@ class OidcClient {
                 .catch(error => {
                 throw new Error(`Failed to get ID Token. \n 
         Error Code : ${error.statusCode}\n 
-        Error Message: ${error.message}`);
+        Error Message: ${error.result.message}`);
             });
             const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
             if (!id_token) {
@@ -28962,16 +28962,15 @@ const logWarning = log(core.warning)
  */
 async function run({ github, context, inputs, metadata }) {
   try {
-    logInfo('gh:')
-    logInfo(JSON.stringify(github))
-    logInfo('context:')
-    logInfo(JSON.stringify(context))
     logInfo('inputs:')
     logInfo(JSON.stringify(inputs))
 
-    if (metadata !== undefined) {
+    if (metadata !== undefined && metadata !== null) {
       logInfo('metadata:')
       logInfo(JSON.stringify(metadata))
+
+      logInfo(metadata.previousVersion)
+      logInfo(metadata.newVersion)
     }
 
     // init octokit
