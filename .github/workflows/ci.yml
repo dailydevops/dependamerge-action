@@ -54,7 +54,7 @@ jobs:
       - name: Run DependaMerge
         uses: ./
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           submodule: true
 
 

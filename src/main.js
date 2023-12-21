@@ -1,30 +1,37 @@
-const core = require('@actions/core')
-const { wait } = require('./wait')
+import * as core from '@actions/core'
+import * as gh from '@actions/github'
+
+import { logInfo, logDebug, logWarning } from './log'
 
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-async function run() {
+export default async function run({ github, context, inputs, metadata }) {
   try {
-    const ms = core.getInput('milliseconds', { required: true })
+    logInfo('gh:')
+    logInfo(JSON.stringify(github))
+    logInfo('context:')
+    logInfo(JSON.stringify(context))
+    logInfo('inputs:')
+    logInfo(JSON.stringify(inputs))
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    if (metadata !== undefined) {
+      logInfo('metadata:')
+      logInfo(JSON.stringify(metadata))
+    }
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    // init octokit
+    // const octokit = gh.getOctokit(inputs.token)
+    const pull_request = context.payload.pull_request
+    const repo = context.payload.repository
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    logInfo('pull_request:')
+    logInfo(JSON.stringify(pull_request))
+    logInfo('repo:')
+    logInfo(JSON.stringify(repo))
   } catch (error) {
     // Fail the workflow run if an error occurs
     core.setFailed(error.message)
   }
-}
-
-module.exports = {
-  run
 }
