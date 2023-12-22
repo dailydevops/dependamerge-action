@@ -24972,6 +24972,15 @@ const outputMessage = 'message'
  */
 async function run({ github, context, inputs, metadata }) {
   try {
+    if (metadata === null || metadata === undefined) {
+      const msg =
+        'No metadata provided! Please validate your configuration, especially the properties `skip-commit-verification` and `skip-verification`.'
+
+      core.setOutput(outputState, state.failed)
+      core.setOutput(outputMessage, msg)
+      core.setFailed(msg)
+    }
+
     const config = {
       inputs: getInputs(inputs),
       metadata: getMetadata(metadata)
