@@ -75,7 +75,7 @@ runs:
       with:
         github-token: ${{ inputs.token }}
         script: |
-          const script = require('${{ github.action_path }}dist/index.js')
+          const script = require('${{ github.action_path }}/dist/index.js')
           await script({
             github,
             context,
