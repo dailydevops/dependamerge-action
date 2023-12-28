@@ -24901,24 +24901,6 @@ function validatePullRequest(pull_request, config) {
     }
   }
 
-  const treatVersion =
-    targetUpdateType === updateTypes.any ||
-    updateTypesPriority.indexOf(config.metadata.updateType) <
-      updateTypesPriority.indexOf(targetUpdateType)
-
-  core.info(
-    `Check package '${config.metadata.dependecyNames}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
-  )
-  core.info(`Is the package version treated? - ${treatVersion}`)
-  if (!treatVersion) {
-    return {
-      execute: false,
-      validationState: state.skipped,
-      validationMessage:
-        'Pull request handles package version greater than the configured value.'
-    }
-  }
-
   if (pull_request.mergeable === false) {
     if (pull_request.rebaseable) {
       return {
@@ -24936,6 +24918,24 @@ function validatePullRequest(pull_request, config) {
         validationState: state.recreated,
         validationMessage: 'Pull request is blocked and will be recreated.'
       }
+    }
+  }
+
+  const treatVersion =
+    targetUpdateType === updateTypes.any ||
+    updateTypesPriority.indexOf(config.metadata.updateType) <
+      updateTypesPriority.indexOf(targetUpdateType)
+
+  core.info(
+    `Check package '${config.metadata.dependecyNames}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
+  )
+  core.info(`Is the package version treated? - ${treatVersion}`)
+  if (!treatVersion) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage:
+        'Pull request handles package version greater than the configured value.'
     }
   }
 
