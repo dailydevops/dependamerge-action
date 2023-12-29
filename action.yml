@@ -76,7 +76,7 @@ runs:
         github-token: ${{ inputs.token }}
         script: |
           const script = require('${{ github.action_path }}/dist/index.js')
-          await script({
+          script({
             github,
             context,
             inputs: ${{ toJSON(inputs) }},
