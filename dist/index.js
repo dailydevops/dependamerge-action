@@ -24973,6 +24973,9 @@ function validatePullRequest(pull_request, config) {
   }
 
   if (!pull_request.mergeable) {
+    core.info(
+      `Pull request merge is blocked by conflicts. - ${pull_request.mergeable} - ${pull_request.mergeable_state}`
+    )
     return {
       execute: false,
       validationState: state.skipped,
