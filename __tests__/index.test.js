@@ -1,6 +1,6 @@
 const core = require('@actions/core')
-const { run } = require('../src/index')
-const { validatePullRequest, state } = require('../src/utils')
+const run = require('../src/index')
+const { state } = require('../src/utils')
 
 // Mock for dependencies (in this case, for the GitHub "core" module)
 jest.mock('@actions/core')

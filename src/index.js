@@ -15,7 +15,7 @@ const outputMessage = 'message'
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-function run({ github, context, inputs, metadata }) {
+module.exports = async function run({ github, context, inputs, metadata }) {
   try {
     if (github === null || github === undefined) {
       const msg = 'No github provided!'
@@ -65,7 +65,7 @@ function run({ github, context, inputs, metadata }) {
     core.setOutput(outputState, validationState)
     core.setOutput(outputMessage, validationMessage)
     if (execute) {
-      cmd(github, repository, pull_request, body)
+      await cmd(github, repository, pull_request, body)
       return core.info(validationMessage)
     } else {
       return core.info(validationMessage)
@@ -76,5 +76,3 @@ function run({ github, context, inputs, metadata }) {
     core.setFailed(error.message)
   }
 }
-
-module.exports = { run }
