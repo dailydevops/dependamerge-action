@@ -72,6 +72,7 @@ runs:
     - name: DependaMerge
       id: dependamerge
       uses: actions/github-script@v7.0.1
+      if: github.event_name == 'pull_request' && (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]' || inputs.skip-verification)  
       with:
         github-token: ${{ inputs.token }}
         script: |
