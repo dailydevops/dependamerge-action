@@ -293,34 +293,37 @@ describe('Tests for `validatePullRequest` function', () => {
     expect(result.validationMessage).toBe('The pull request will be rebased.')
   })
 
-  test('should return `false` when pull request is not mergeable', () => {
-    const pullRequest = {
-      merged: false,
-      state: 'open',
-      draft: false,
-      mergeable: false,
-      user: {
-        login: 'dependabot[bot]'
+  test.each([['dirty'], ['blocked']])(
+    'should return `false` when pull request has a mergeable state of `%s`',
+    mergeableState => {
+      const pullRequest = {
+        merged: false,
+        state: 'open',
+        draft: false,
+        user: {
+          login: 'dependabot[bot]'
+        },
+        mergeable_state: mergeableState
       }
+
+      const config = {
+        inputs: {
+          approveOnly: false,
+          handleSubmodule: true,
+          handleDependencyGroup: true
+        },
+        metadata: {}
+      }
+
+      const result = validatePullRequest(pullRequest, config)
+
+      expect(result.execute).toBe(false)
+      expect(result.validationState).toBe(state.skipped)
+      expect(result.validationMessage).toBe(
+        'Pull request merge is blocked by conflicts, please resolve them manually.'
+      )
     }
-
-    const config = {
-      inputs: {
-        approveOnly: false,
-        handleSubmodule: true,
-        handleDependencyGroup: true
-      },
-      metadata: {}
-    }
-
-    const result = validatePullRequest(pullRequest, config)
-
-    expect(result.execute).toBe(false)
-    expect(result.validationState).toBe(state.skipped)
-    expect(result.validationMessage).toBe(
-      'Pull request merge is blocked by conflicts, please resolve them manually.'
-    )
-  })
+  )
 
   test.each([
     ['version-update:semver-minor', 'version-update:semver-major'],
@@ -332,7 +335,6 @@ describe('Tests for `validatePullRequest` function', () => {
         merged: false,
         state: 'open',
         draft: false,
-        mergeable: true,
         user: {
           login: 'dependabot[bot]'
         }
@@ -380,7 +382,6 @@ describe('Tests for `validatePullRequest` function', () => {
         merged: false,
         state: 'open',
         draft: false,
-        mergeable: true,
         user: {
           login: 'dependabot[bot]'
         }
@@ -413,7 +414,6 @@ describe('Tests for `validatePullRequest` function', () => {
       merged: false,
       state: 'open',
       draft: false,
-      mergeable: true,
       user: {
         login: 'dependabot[bot]'
       }

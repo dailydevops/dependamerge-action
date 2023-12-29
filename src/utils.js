@@ -145,9 +145,12 @@ function validatePullRequest(pull_request, config) {
     }
   }
 
-  if (!pull_request.mergeable) {
+  if (
+    pull_request.mergeable_state === 'blocked' ||
+    pull_request.mergeable_state === 'dirty'
+  ) {
     core.info(
-      `Pull request merge is blocked by conflicts. - ${pull_request.mergeable} - ${pull_request.mergeable_state}`
+      `Pull request merge is blocked by conflicts. State: ${pull_request.mergeable_state}`
     )
     return {
       execute: false,
