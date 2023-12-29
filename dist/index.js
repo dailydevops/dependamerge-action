@@ -24708,8 +24708,8 @@ exports["default"] = _default;
 "use strict";
 
 
-async function approvePullRequest(github, repo, pull_request, body) {
-  await github.rest.pulls.createReview({
+function approvePullRequest(github, repo, pull_request, body) {
+  github.rest.pulls.createReview({
     owner: repo.owner.login,
     repo: repo.name,
     pull_number: pull_request.number,
@@ -24718,8 +24718,8 @@ async function approvePullRequest(github, repo, pull_request, body) {
   })
 }
 
-async function addComment(github, repo, pull_request, body) {
-  await github.rest.issues.createComment({
+function addComment(github, repo, pull_request, body) {
+  github.rest.issues.createComment({
     owner: repo.owner.login,
     repo: repo.name,
     issue_number: pull_request.number,
@@ -24756,7 +24756,7 @@ const outputMessage = 'message'
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-async function run({ github, context, inputs, metadata }) {
+function run({ github, context, inputs, metadata }) {
   try {
     if (github === null || github === undefined) {
       const msg = 'No github provided!'
@@ -24806,7 +24806,7 @@ async function run({ github, context, inputs, metadata }) {
     core.setOutput(outputState, validationState)
     core.setOutput(outputMessage, validationMessage)
     if (execute) {
-      await cmd(github, repository, pull_request, body)
+      cmd(github, repository, pull_request, body)
       return core.info(validationMessage)
     } else {
       return core.info(validationMessage)
