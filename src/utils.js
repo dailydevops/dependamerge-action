@@ -1,39 +1,38 @@
 'use strict'
 
-import * as core from '@actions/core'
-
-import * as cmd from './api'
+const core = require('@actions/core')
+const cmd = require('./api')
 
 const dependabotUser = 'dependabot[bot]'
-const dependabotCommitter = 'GitHub'
+// const dependabotCommitter = 'GitHub'
 
 const getCommand = inputs => {
-  const command = inputs['command']
-
-  if (command === 'merge') {
+  if (
+    inputs !== undefined &&
+    inputs !== null &&
+    inputs['command'] === 'merge'
+  ) {
     return commandText.merge
   }
 
   return commandText.squash
 }
 
-export const state = {
+const state = {
   approved: 'approved',
   merged: 'merged',
   skipped: 'skipped',
   failed: 'failed',
-  rebased: 'rebased',
-  recreated: 'recreated'
+  rebased: 'rebased'
 }
 
-export const commandText = {
+const commandText = {
   merge: 'merge',
   squash: 'squash and merge',
-  rebase: 'rebase',
-  recreate: 'recreate'
+  rebase: 'rebase'
 }
 
-export const updateTypes = {
+const updateTypes = {
   major: 'version-update:semver-major',
   minor: 'version-update:semver-minor',
   patch: 'version-update:semver-patch',
@@ -41,17 +40,17 @@ export const updateTypes = {
 }
 
 const mapUpdateType = input => {
-  return updateTypes[input] || updateTypes.any
+  return updateTypes[input] || updateTypes.patch
 }
 
-export const updateTypesPriority = [
+const updateTypesPriority = [
   updateTypes.patch,
   updateTypes.minor,
   updateTypes.major,
   updateTypes.any
 ]
 
-export function getInputs(inputs) {
+function getInputs(inputs) {
   return {
     token: inputs['token'],
     approveOnly: inputs['approve-only'] === 'true',
@@ -59,30 +58,12 @@ export function getInputs(inputs) {
     handleSubmodule: inputs['handle-submodule'] === 'true',
     handleDependencyGroup: inputs['handle-dependency-group'] === 'true',
     target: mapUpdateType(inputs['target']),
-    skipCommitVerification: inputs['skip-commit-verification'],
-    skipVerification: inputs['skip-verification']
+    skipCommitVerification: inputs['skip-commit-verification'] === 'true',
+    skipVerification: inputs['skip-verification'] === 'true'
   }
 }
 
-export function getMetadata(metadata) {
-  if (metadata === undefined || metadata === null) {
-    return {
-      dependecyNames: '',
-      dependecyType: '',
-      updateType: '',
-      ecosystem: '',
-      targetBranch: '',
-      previousVersion: '',
-      newVersion: '',
-      compatibilityScore: '',
-      maintainerChanges: '',
-      dependecyGroup: '',
-      alertState: '',
-      ghsaId: '',
-      cvss: ''
-    }
-  }
-
+function getMetadata(metadata) {
   return {
     dependecyNames: metadata['dependency-names'],
     dependecyType: metadata['dependency-type'],
@@ -100,7 +81,23 @@ export function getMetadata(metadata) {
   }
 }
 
-export function validatePullRequest(pull_request, config) {
+function validatePullRequest(pull_request, config) {
+  if (pull_request.state !== 'open' || pull_request.merged) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage: 'Pull request is not open or already merged.'
+    }
+  }
+
+  if (pull_request.draft) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage: 'Pull request is a draft.'
+    }
+  }
+
   if (
     !config.inputs.skipVerification &&
     pull_request.user.login !== dependabotUser
@@ -108,15 +105,7 @@ export function validatePullRequest(pull_request, config) {
     return {
       execute: false,
       validationState: state.skipped,
-      validationMessage: `The Commit/PullRequest was not executed by '${dependabotUser}'`
-    }
-  }
-
-  if (pull_request.state !== 'open' || pull_request.merged) {
-    return {
-      execute: false,
-      validationState: state.skipped,
-      validationMessage: 'Pull request is not open or already merged.'
+      validationMessage: `The Commit/PullRequest was not created by ${dependabotUser}.`
     }
   }
 
@@ -127,7 +116,7 @@ export function validatePullRequest(pull_request, config) {
         execute: false,
         validationState: state.skipped,
         validationMessage:
-          'Pull request is associated with a submodule but the action is not configured to handle submodules'
+          'The pull-request is associated with a submodule but the action is not configured to handle submodules.'
       }
     } else {
       targetUpdateType = updateTypes.any
@@ -142,33 +131,32 @@ export function validatePullRequest(pull_request, config) {
       execute: false,
       validationState: state.skipped,
       validationMessage:
-        'The pull-request is associated with a dependency group but the action is not configured to handle dependency groups'
+        'The pull-request is associated with a dependency group but the action is not configured to handle dependency groups.'
     }
   }
 
-  if (pull_request.mergeable === false) {
-    if (pull_request.rebaseable) {
-      return {
-        execute: true,
-        body: `@dependabot ${commandText.rebase}`,
-        cmd: cmd.addComment,
-        validationState: state.rebased,
-        validationMessage: 'Pull request is blocked and will be rebased.'
-      }
-    } else {
-      return {
-        execute: true,
-        body: `@dependabot ${commandText.recreate}`,
-        cmd: cmd.addComment,
-        validationState: state.recreated,
-        validationMessage: 'Pull request is blocked and will be recreated.'
-      }
+  if (pull_request.mergeable_state === 'behind') {
+    return {
+      execute: true,
+      body: `@dependabot ${commandText.rebase}`,
+      cmd: cmd.addComment,
+      validationState: state.rebased,
+      validationMessage: 'The pull request will be rebased.'
+    }
+  }
+
+  if (!pull_request.mergeable) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage:
+        'Pull request merge is blocked by conflicts, please resolve them manually.'
     }
   }
 
   const treatVersion =
     targetUpdateType === updateTypes.any ||
-    updateTypesPriority.indexOf(config.metadata.updateType) <
+    updateTypesPriority.indexOf(config.metadata.updateType) <=
       updateTypesPriority.indexOf(targetUpdateType)
 
   core.info(
@@ -179,8 +167,7 @@ export function validatePullRequest(pull_request, config) {
     return {
       execute: false,
       validationState: state.skipped,
-      validationMessage:
-        'Pull request handles package version greater than the configured value.'
+      validationMessage: `The package version is not treated by the action.`
     }
   }
 
@@ -190,7 +177,7 @@ export function validatePullRequest(pull_request, config) {
       body: 'Approved by DependaMerge.',
       cmd: cmd.approvePullRequest,
       validationState: state.approved,
-      validationMessage: 'Pull request is approved.'
+      validationMessage: 'The pull request will be approved.'
     }
   }
 
@@ -199,6 +186,13 @@ export function validatePullRequest(pull_request, config) {
     body: `@dependabot ${config.inputs.commandMethod}`,
     cmd: cmd.approvePullRequest,
     validationState: state.merged,
-    validationMessage: 'Pull request is merged.'
+    validationMessage: 'The pull request will be merged.'
   }
+}
+
+module.exports = {
+  getInputs,
+  getMetadata,
+  state,
+  validatePullRequest
 }

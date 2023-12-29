@@ -32,9 +32,9 @@ inputs:
     default: true
   
   target:
-    description: 'The version comparision target. Valid values: major, minor or patch - Default: minor'
+    description: 'The version comparision target. Valid values: major, minor, patch, any - Default: patch'
     required: false
-    default: minor
+    default: patch
 
   skip-commit-verification:
     description: 'If true, then the action will not expect the commits to have a verification signature. It is required to set this to true in GitHub Enterprise Server'

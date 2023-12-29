@@ -24702,35 +24702,10 @@ exports["default"] = _default;
 
 /***/ }),
 
-/***/ 4351:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 612:
+/***/ ((module) => {
 
 "use strict";
-
-
-/**
- * The entrypoint for the action.
- */
-const run = (__nccwpck_require__(242)/* ["default"] */ .Z)
-
-module.exports = run
-
-
-/***/ }),
-
-/***/ 242:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-
-// EXPORTS
-__nccwpck_require__.d(__webpack_exports__, {
-  "Z": () => (/* binding */ run)
-});
-
-// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var core = __nccwpck_require__(2186);
-;// CONCATENATED MODULE: ./src/api.js
 
 
 async function approvePullRequest(github, repo, pull_request, body) {
@@ -24752,216 +24727,27 @@ async function addComment(github, repo, pull_request, body) {
   })
 }
 
-;// CONCATENATED MODULE: ./src/utils.js
-
-
-;
-
-
-
-const dependabotUser = 'dependabot[bot]'
-const dependabotCommitter = 'GitHub'
-
-const getCommand = inputs => {
-  const command = inputs['command']
-
-  if (command === 'merge') {
-    return commandText.merge
-  }
-
-  return commandText.squash
+module.exports = {
+  approvePullRequest,
+  addComment
 }
 
-const state = {
-  approved: 'approved',
-  merged: 'merged',
-  skipped: 'skipped',
-  failed: 'failed',
-  rebased: 'rebased',
-  recreated: 'recreated'
-}
 
-const commandText = {
-  merge: 'merge',
-  squash: 'squash and merge',
-  rebase: 'rebase',
-  recreate: 'recreate'
-}
+/***/ }),
 
-const updateTypes = {
-  major: 'version-update:semver-major',
-  minor: 'version-update:semver-minor',
-  patch: 'version-update:semver-patch',
-  any: 'version-update:semver-any'
-}
+/***/ 4351:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const mapUpdateType = input => {
-  return updateTypes[input] || updateTypes.any
-}
-
-const updateTypesPriority = [
-  updateTypes.patch,
-  updateTypes.minor,
-  updateTypes.major,
-  updateTypes.any
-]
-
-function getInputs(inputs) {
-  return {
-    token: inputs['token'],
-    approveOnly: inputs['approve-only'] === 'true',
-    commandMethod: getCommand(inputs),
-    handleSubmodule: inputs['handle-submodule'] === 'true',
-    handleDependencyGroup: inputs['handle-dependency-group'] === 'true',
-    target: mapUpdateType(inputs['target']),
-    skipCommitVerification: inputs['skip-commit-verification'],
-    skipVerification: inputs['skip-verification']
-  }
-}
-
-function getMetadata(metadata) {
-  if (metadata === undefined || metadata === null) {
-    return {
-      dependecyNames: '',
-      dependecyType: '',
-      updateType: '',
-      ecosystem: '',
-      targetBranch: '',
-      previousVersion: '',
-      newVersion: '',
-      compatibilityScore: '',
-      maintainerChanges: '',
-      dependecyGroup: '',
-      alertState: '',
-      ghsaId: '',
-      cvss: ''
-    }
-  }
-
-  return {
-    dependecyNames: metadata['dependency-names'],
-    dependecyType: metadata['dependency-type'],
-    updateType: metadata['update-type'],
-    ecosystem: metadata['package-ecosystem'],
-    targetBranch: metadata['target-branch'],
-    previousVersion: metadata['previous-version'],
-    newVersion: metadata['new-version'],
-    compatibilityScore: metadata['compatibility-score'],
-    maintainerChanges: metadata['maintainer-changes'],
-    dependecyGroup: metadata['dependency-group'],
-    alertState: metadata['alert-state'],
-    ghsaId: metadata['ghsa-id'],
-    cvss: metadata['cvss']
-  }
-}
-
-function validatePullRequest(pull_request, config) {
-  if (
-    !config.inputs.skipVerification &&
-    pull_request.user.login !== dependabotUser
-  ) {
-    return {
-      execute: false,
-      validationState: state.skipped,
-      validationMessage: `The Commit/PullRequest was not executed by '${dependabotUser}'`
-    }
-  }
-
-  if (pull_request.state !== 'open' || pull_request.merged) {
-    return {
-      execute: false,
-      validationState: state.skipped,
-      validationMessage: 'Pull request is not open or already merged.'
-    }
-  }
-
-  let targetUpdateType = config.inputs.target
-  if (config.metadata.ecosystem === 'gitsubmodule') {
-    if (!config.inputs.handleSubmodule) {
-      return {
-        execute: false,
-        validationState: state.skipped,
-        validationMessage:
-          'Pull request is associated with a submodule but the action is not configured to handle submodules'
-      }
-    } else {
-      targetUpdateType = updateTypes.any
-    }
-  }
-
-  if (
-    !config.inputs.handleDependencyGroup &&
-    config.metadata.dependecyGroup !== ''
-  ) {
-    return {
-      execute: false,
-      validationState: state.skipped,
-      validationMessage:
-        'The pull-request is associated with a dependency group but the action is not configured to handle dependency groups'
-    }
-  }
-
-  if (pull_request.mergeable === false) {
-    if (pull_request.rebaseable) {
-      return {
-        execute: true,
-        body: `@dependabot ${commandText.rebase}`,
-        cmd: addComment,
-        validationState: state.rebased,
-        validationMessage: 'Pull request is blocked and will be rebased.'
-      }
-    } else {
-      return {
-        execute: true,
-        body: `@dependabot ${commandText.recreate}`,
-        cmd: addComment,
-        validationState: state.recreated,
-        validationMessage: 'Pull request is blocked and will be recreated.'
-      }
-    }
-  }
-
-  const treatVersion =
-    targetUpdateType === updateTypes.any ||
-    updateTypesPriority.indexOf(config.metadata.updateType) <
-      updateTypesPriority.indexOf(targetUpdateType)
-
-  core.info(
-    `Check package '${config.metadata.dependecyNames}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
-  )
-  core.info(`Is the package version treated? - ${treatVersion}`)
-  if (!treatVersion) {
-    return {
-      execute: false,
-      validationState: state.skipped,
-      validationMessage:
-        'Pull request handles package version greater than the configured value.'
-    }
-  }
-
-  if (config.inputs.approveOnly) {
-    return {
-      execute: true,
-      body: 'Approved by DependaMerge.',
-      cmd: approvePullRequest,
-      validationState: state.approved,
-      validationMessage: 'Pull request is approved.'
-    }
-  }
-
-  return {
-    execute: true,
-    body: `@dependabot ${config.inputs.commandMethod}`,
-    cmd: approvePullRequest,
-    validationState: state.merged,
-    validationMessage: 'Pull request is merged.'
-  }
-}
-
-;// CONCATENATED MODULE: ./src/main.js
+"use strict";
 
 
-
+const core = __nccwpck_require__(2186)
+const {
+  getInputs,
+  getMetadata,
+  state,
+  validatePullRequest
+} = __nccwpck_require__(1608)
 
 const outputState = 'state'
 const outputMessage = 'message'
@@ -24972,13 +24758,38 @@ const outputMessage = 'message'
  */
 async function run({ github, context, inputs, metadata }) {
   try {
+    if (github === null || github === undefined) {
+      const msg = 'No github provided!'
+
+      core.setOutput(outputState, state.failed)
+      core.setOutput(outputMessage, msg)
+      return core.setFailed(msg)
+    }
+
+    if (context === null || context === undefined) {
+      const msg = 'No context provided!'
+
+      core.setOutput(outputState, state.failed)
+      core.setOutput(outputMessage, msg)
+      return core.setFailed(msg)
+    }
+
+    if (inputs === null || inputs === undefined) {
+      const msg =
+        'No inputs provided! Please validate your configuration, especially the properties `skip-commit-verification` and `skip-verification`.'
+
+      core.setOutput(outputState, state.failed)
+      core.setOutput(outputMessage, msg)
+      return core.setFailed(msg)
+    }
+
     if (metadata === null || metadata === undefined) {
       const msg =
         'No metadata provided! Please validate your configuration, especially the properties `skip-commit-verification` and `skip-verification`.'
 
       core.setOutput(outputState, state.failed)
       core.setOutput(outputMessage, msg)
-      core.setFailed(msg)
+      return core.setFailed(msg)
     }
 
     const config = {
@@ -24998,13 +24809,221 @@ async function run({ github, context, inputs, metadata }) {
       await cmd(github, repository, pull_request, body)
       return core.info(validationMessage)
     } else {
-      return core.warning(validationMessage)
+      return core.info(validationMessage)
     }
   } catch (error) {
     core.setOutput(outputState, state.failed)
     core.setOutput(outputMessage, error.message)
     core.setFailed(error.message)
   }
+}
+
+module.exports = { run }
+
+
+/***/ }),
+
+/***/ 1608:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const core = __nccwpck_require__(2186)
+const cmd = __nccwpck_require__(612)
+
+const dependabotUser = 'dependabot[bot]'
+// const dependabotCommitter = 'GitHub'
+
+const getCommand = inputs => {
+  if (
+    inputs !== undefined &&
+    inputs !== null &&
+    inputs['command'] === 'merge'
+  ) {
+    return commandText.merge
+  }
+
+  return commandText.squash
+}
+
+const state = {
+  approved: 'approved',
+  merged: 'merged',
+  skipped: 'skipped',
+  failed: 'failed',
+  rebased: 'rebased'
+}
+
+const commandText = {
+  merge: 'merge',
+  squash: 'squash and merge',
+  rebase: 'rebase'
+}
+
+const updateTypes = {
+  major: 'version-update:semver-major',
+  minor: 'version-update:semver-minor',
+  patch: 'version-update:semver-patch',
+  any: 'version-update:semver-any'
+}
+
+const mapUpdateType = input => {
+  return updateTypes[input] || updateTypes.patch
+}
+
+const updateTypesPriority = [
+  updateTypes.patch,
+  updateTypes.minor,
+  updateTypes.major,
+  updateTypes.any
+]
+
+function getInputs(inputs) {
+  return {
+    token: inputs['token'],
+    approveOnly: inputs['approve-only'] === 'true',
+    commandMethod: getCommand(inputs),
+    handleSubmodule: inputs['handle-submodule'] === 'true',
+    handleDependencyGroup: inputs['handle-dependency-group'] === 'true',
+    target: mapUpdateType(inputs['target']),
+    skipCommitVerification: inputs['skip-commit-verification'] === 'true',
+    skipVerification: inputs['skip-verification'] === 'true'
+  }
+}
+
+function getMetadata(metadata) {
+  return {
+    dependecyNames: metadata['dependency-names'],
+    dependecyType: metadata['dependency-type'],
+    updateType: metadata['update-type'],
+    ecosystem: metadata['package-ecosystem'],
+    targetBranch: metadata['target-branch'],
+    previousVersion: metadata['previous-version'],
+    newVersion: metadata['new-version'],
+    compatibilityScore: metadata['compatibility-score'],
+    maintainerChanges: metadata['maintainer-changes'],
+    dependecyGroup: metadata['dependency-group'],
+    alertState: metadata['alert-state'],
+    ghsaId: metadata['ghsa-id'],
+    cvss: metadata['cvss']
+  }
+}
+
+function validatePullRequest(pull_request, config) {
+  if (pull_request.state !== 'open' || pull_request.merged) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage: 'Pull request is not open or already merged.'
+    }
+  }
+
+  if (pull_request.draft) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage: 'Pull request is a draft.'
+    }
+  }
+
+  if (
+    !config.inputs.skipVerification &&
+    pull_request.user.login !== dependabotUser
+  ) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage: `The Commit/PullRequest was not created by ${dependabotUser}.`
+    }
+  }
+
+  let targetUpdateType = config.inputs.target
+  if (config.metadata.ecosystem === 'gitsubmodule') {
+    if (!config.inputs.handleSubmodule) {
+      return {
+        execute: false,
+        validationState: state.skipped,
+        validationMessage:
+          'The pull-request is associated with a submodule but the action is not configured to handle submodules.'
+      }
+    } else {
+      targetUpdateType = updateTypes.any
+    }
+  }
+
+  if (
+    !config.inputs.handleDependencyGroup &&
+    config.metadata.dependecyGroup !== ''
+  ) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage:
+        'The pull-request is associated with a dependency group but the action is not configured to handle dependency groups.'
+    }
+  }
+
+  if (pull_request.mergeable_state === 'behind') {
+    return {
+      execute: true,
+      body: `@dependabot ${commandText.rebase}`,
+      cmd: cmd.addComment,
+      validationState: state.rebased,
+      validationMessage: 'The pull request will be rebased.'
+    }
+  }
+
+  if (!pull_request.mergeable) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage:
+        'Pull request merge is blocked by conflicts, please resolve them manually.'
+    }
+  }
+
+  const treatVersion =
+    targetUpdateType === updateTypes.any ||
+    updateTypesPriority.indexOf(config.metadata.updateType) <=
+      updateTypesPriority.indexOf(targetUpdateType)
+
+  core.info(
+    `Check package '${config.metadata.dependecyNames}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
+  )
+  core.info(`Is the package version treated? - ${treatVersion}`)
+  if (!treatVersion) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage: `The package version is not treated by the action.`
+    }
+  }
+
+  if (config.inputs.approveOnly) {
+    return {
+      execute: true,
+      body: 'Approved by DependaMerge.',
+      cmd: cmd.approvePullRequest,
+      validationState: state.approved,
+      validationMessage: 'The pull request will be approved.'
+    }
+  }
+
+  return {
+    execute: true,
+    body: `@dependabot ${config.inputs.commandMethod}`,
+    cmd: cmd.approvePullRequest,
+    validationState: state.merged,
+    validationMessage: 'The pull request will be merged.'
+  }
+}
+
+module.exports = {
+  getInputs,
+  getMetadata,
+  state,
+  validatePullRequest
 }
 
 
@@ -26886,23 +26905,6 @@ module.exports = parseParams
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
