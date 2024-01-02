@@ -4,6 +4,27 @@ const { getInputs, state, validatePullRequest } = require('../src/utils')
 // Mock for dependencies (in this case, for the GitHub "core" module)
 jest.mock('@actions/core')
 
+// Mock for the object `github` that is passed to the action
+const github = {
+  rest: {
+    issues: {
+      createComment: jest.fn()
+    },
+    pulls: {
+      createReview: jest.fn(),
+      get: jest.fn()
+    }
+  }
+}
+
+// Mock for the object `repository` that is passed to the action
+const repository = {
+  owner: {
+    login: 'dependabot[bot]'
+  },
+  name: 'test-repo'
+}
+
 describe('Tests for `getInputs` function', () => {
   test.each([
     ['merge', 'merge'],
@@ -119,7 +140,7 @@ describe('Tests for `getInputs` function', () => {
 })
 
 describe('Tests for `validatePullRequest` function', () => {
-  test('should return `false` when pull request is already merged', () => {
+  test('should return `false` when pull request is already merged', async () => {
     const pullRequest = {
       merged: true
     }
@@ -130,7 +151,12 @@ describe('Tests for `validatePullRequest` function', () => {
       }
     }
 
-    const result = validatePullRequest(pullRequest, config)
+    const result = await validatePullRequest(
+      github,
+      repository,
+      pullRequest,
+      config
+    )
 
     expect(result.execute).toBe(false)
     expect(result.validationState).toBe(state.skipped)
@@ -139,7 +165,7 @@ describe('Tests for `validatePullRequest` function', () => {
     )
   })
 
-  test('should return `false` when pull request is not open', () => {
+  test('should return `false` when pull request is not open', async () => {
     const pullRequest = {
       merged: false,
       state: 'closed'
@@ -151,7 +177,12 @@ describe('Tests for `validatePullRequest` function', () => {
       }
     }
 
-    const result = validatePullRequest(pullRequest, config)
+    const result = await validatePullRequest(
+      github,
+      repository,
+      pullRequest,
+      config
+    )
 
     expect(result.execute).toBe(false)
     expect(result.validationState).toBe(state.skipped)
@@ -160,7 +191,7 @@ describe('Tests for `validatePullRequest` function', () => {
     )
   })
 
-  test('should return `false` when pull request is a draft', () => {
+  test('should return `false` when pull request is a draft', async () => {
     const pullRequest = {
       merged: false,
       state: 'open',
@@ -173,14 +204,19 @@ describe('Tests for `validatePullRequest` function', () => {
       }
     }
 
-    const result = validatePullRequest(pullRequest, config)
+    const result = await validatePullRequest(
+      github,
+      repository,
+      pullRequest,
+      config
+    )
 
     expect(result.execute).toBe(false)
     expect(result.validationState).toBe(state.skipped)
     expect(result.validationMessage).toBe('Pull request is a draft.')
   })
 
-  test('should return `false` when pull request was not created by dependabot', () => {
+  test('should return `false` when pull request was not created by dependabot', async () => {
     const pullRequest = {
       merged: false,
       state: 'open',
@@ -196,7 +232,12 @@ describe('Tests for `validatePullRequest` function', () => {
       }
     }
 
-    const result = validatePullRequest(pullRequest, config)
+    const result = await validatePullRequest(
+      github,
+      repository,
+      pullRequest,
+      config
+    )
 
     expect(result.execute).toBe(false)
     expect(result.validationState).toBe(state.skipped)
@@ -205,7 +246,7 @@ describe('Tests for `validatePullRequest` function', () => {
     )
   })
 
-  test('should return `false` when pull request is associated with a submodule but the action is not configured to handle submodules', () => {
+  test('should return `false` when pull request is associated with a submodule but the action is not configured to handle submodules', async () => {
     const pullRequest = {
       merged: false,
       state: 'open',
@@ -225,7 +266,12 @@ describe('Tests for `validatePullRequest` function', () => {
       }
     }
 
-    const result = validatePullRequest(pullRequest, config)
+    const result = await validatePullRequest(
+      github,
+      repository,
+      pullRequest,
+      config
+    )
 
     expect(result.execute).toBe(false)
     expect(result.validationState).toBe(state.skipped)
@@ -234,7 +280,7 @@ describe('Tests for `validatePullRequest` function', () => {
     )
   })
 
-  test('should return `false` when pull request is associated with a dependency group but the action is not configured to handle dependency groups', () => {
+  test('should return `false` when pull request is associated with a dependency group but the action is not configured to handle dependency groups', async () => {
     const pullRequest = {
       merged: false,
       state: 'open',
@@ -256,7 +302,12 @@ describe('Tests for `validatePullRequest` function', () => {
       }
     }
 
-    const result = validatePullRequest(pullRequest, config)
+    const result = await validatePullRequest(
+      github,
+      repository,
+      pullRequest,
+      config
+    )
 
     expect(result.execute).toBe(false)
     expect(result.validationState).toBe(state.skipped)
@@ -265,7 +316,7 @@ describe('Tests for `validatePullRequest` function', () => {
     )
   })
 
-  test('should return `true` when pull request has a mergeable state of `behind`', () => {
+  test('should return `true` when pull request has a mergeable state of `behind`', async () => {
     const pullRequest = {
       merged: false,
       state: 'open',
@@ -273,6 +324,7 @@ describe('Tests for `validatePullRequest` function', () => {
       user: {
         login: 'dependabot[bot]'
       },
+      mergeable: true,
       mergeable_state: 'behind'
     }
 
@@ -285,7 +337,12 @@ describe('Tests for `validatePullRequest` function', () => {
       metadata: {}
     }
 
-    const result = validatePullRequest(pullRequest, config)
+    const result = await validatePullRequest(
+      github,
+      repository,
+      pullRequest,
+      config
+    )
 
     expect(result.execute).toBe(true)
     expect(result.body).toBe('@dependabot rebase')
@@ -295,7 +352,7 @@ describe('Tests for `validatePullRequest` function', () => {
 
   test.each([['dirty'], ['blocked']])(
     'should return `false` when pull request has a mergeable state of `%s`',
-    mergeableState => {
+    async mergeableState => {
       const pullRequest = {
         merged: false,
         state: 'open',
@@ -303,6 +360,7 @@ describe('Tests for `validatePullRequest` function', () => {
         user: {
           login: 'dependabot[bot]'
         },
+        mergeable: true,
         mergeable_state: mergeableState
       }
 
@@ -315,7 +373,12 @@ describe('Tests for `validatePullRequest` function', () => {
         metadata: {}
       }
 
-      const result = validatePullRequest(pullRequest, config)
+      const result = await validatePullRequest(
+        github,
+        repository,
+        pullRequest,
+        config
+      )
 
       expect(result.execute).toBe(false)
       expect(result.validationState).toBe(state.skipped)
@@ -330,14 +393,15 @@ describe('Tests for `validatePullRequest` function', () => {
     ['version-update:semver-patch', 'version-update:semver-minor']
   ])(
     'should return `false` when pull request has a target `%s` and update type `%s`',
-    (target, updateType) => {
+    async (target, updateType) => {
       const pullRequest = {
         merged: false,
         state: 'open',
         draft: false,
         user: {
           login: 'dependabot[bot]'
-        }
+        },
+        mergeable: true
       }
 
       const config = {
@@ -352,7 +416,12 @@ describe('Tests for `validatePullRequest` function', () => {
         }
       }
 
-      const result = validatePullRequest(pullRequest, config)
+      const result = await validatePullRequest(
+        github,
+        repository,
+        pullRequest,
+        config
+      )
 
       expect(result.execute).toBe(false)
       expect(result.validationState).toBe(state.skipped)
@@ -377,14 +446,15 @@ describe('Tests for `validatePullRequest` function', () => {
     ]
   ])(
     'should return `true` when pull request has a target `%s` and update type `%s` and command `%s`',
-    (target, updateType, cmd) => {
+    async (target, updateType, cmd) => {
       const pullRequest = {
         merged: false,
         state: 'open',
         draft: false,
         user: {
           login: 'dependabot[bot]'
-        }
+        },
+        mergeable: true
       }
 
       const config = {
@@ -400,7 +470,12 @@ describe('Tests for `validatePullRequest` function', () => {
         }
       }
 
-      const result = validatePullRequest(pullRequest, config)
+      const result = await validatePullRequest(
+        github,
+        repository,
+        pullRequest,
+        config
+      )
 
       expect(result.execute).toBe(true)
       expect(result.body).toBe(`@dependabot ${cmd}`)
@@ -409,14 +484,15 @@ describe('Tests for `validatePullRequest` function', () => {
     }
   )
 
-  test('should return `true` when pull request has approve-only enabled', () => {
+  test('should return `true` when pull request has approve-only enabled', async () => {
     const pullRequest = {
       merged: false,
       state: 'open',
       draft: false,
       user: {
         login: 'dependabot[bot]'
-      }
+      },
+      mergeable: true
     }
 
     const config = {
@@ -432,7 +508,12 @@ describe('Tests for `validatePullRequest` function', () => {
       }
     }
 
-    const result = validatePullRequest(pullRequest, config)
+    const result = await validatePullRequest(
+      github,
+      repository,
+      pullRequest,
+      config
+    )
 
     expect(result.execute).toBe(true)
     expect(result.body).toBe('Approved by DependaMerge.')

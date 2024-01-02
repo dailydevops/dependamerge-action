@@ -24708,6 +24708,15 @@ exports["default"] = _default;
 "use strict";
 
 
+async function addComment(github, repo, pull_request, body) {
+  await github.rest.issues.createComment({
+    owner: repo.owner.login,
+    repo: repo.name,
+    issue_number: pull_request.number,
+    body
+  })
+}
+
 async function approvePullRequest(github, repo, pull_request, body) {
   await github.rest.pulls.createReview({
     owner: repo.owner.login,
@@ -24718,18 +24727,18 @@ async function approvePullRequest(github, repo, pull_request, body) {
   })
 }
 
-async function addComment(github, repo, pull_request, body) {
-  await github.rest.issues.createComment({
+async function getPullRequest(github, repo, pull_request) {
+  return await github.rest.pulls.get({
     owner: repo.owner.login,
     repo: repo.name,
-    issue_number: pull_request.number,
-    body
+    pull_number: pull_request.number
   })
 }
 
 module.exports = {
+  addComment,
   approvePullRequest,
-  addComment
+  getPullRequest
 }
 
 
@@ -24758,7 +24767,7 @@ const outputMessage = 'message'
  */
 module.exports = async function run({ github, context, inputs, metadata }) {
   try {
-    if (github === null || github === undefined) {
+    if (!github) {
       const msg = 'No github provided!'
 
       core.setOutput(outputState, state.failed)
@@ -24766,7 +24775,7 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       return core.setFailed(msg)
     }
 
-    if (context === null || context === undefined) {
+    if (!context) {
       const msg = 'No context provided!'
 
       core.setOutput(outputState, state.failed)
@@ -24774,7 +24783,7 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       return core.setFailed(msg)
     }
 
-    if (inputs === null || inputs === undefined) {
+    if (!inputs) {
       const msg =
         'No inputs provided! Please validate your configuration, especially the properties `skip-commit-verification` and `skip-verification`.'
 
@@ -24783,7 +24792,7 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       return core.setFailed(msg)
     }
 
-    if (metadata === null || metadata === undefined) {
+    if (!metadata) {
       const msg =
         'No metadata provided! Please validate your configuration, especially the properties `skip-commit-verification` and `skip-verification`.'
 
@@ -24791,6 +24800,11 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       core.setOutput(outputMessage, msg)
       return core.setFailed(msg)
     }
+
+    core.debug(`GitHub: ${JSON.stringify(github, null, 2)}`)
+    core.debug(`Context: ${JSON.stringify(context, null, 2)}`)
+    core.debug(`Inputs: ${JSON.stringify(inputs, null, 2)}`)
+    core.debug(`Metadata: ${JSON.stringify(metadata, null, 2)}`)
 
     const config = {
       inputs: getInputs(inputs),
@@ -24801,7 +24815,7 @@ module.exports = async function run({ github, context, inputs, metadata }) {
     const { pull_request, repository } = context.payload
 
     const { execute, cmd, body, validationState, validationMessage } =
-      validatePullRequest(pull_request, config)
+      await validatePullRequest(github, repository, pull_request, config)
 
     core.setOutput(outputState, validationState)
     core.setOutput(outputMessage, validationMessage)
@@ -24908,7 +24922,7 @@ function getMetadata(metadata) {
   }
 }
 
-function validatePullRequest(pull_request, config) {
+async function validatePullRequest(github, repository, pull_request, config) {
   if (pull_request.state !== 'open' || pull_request.merged) {
     return {
       execute: false,
@@ -24959,6 +24973,41 @@ function validatePullRequest(pull_request, config) {
       validationState: state.skipped,
       validationMessage:
         'The pull-request is associated with a dependency group but the action is not configured to handle dependency groups.'
+    }
+  }
+
+  let retryCount = 0
+  let mergeabilityResolved = pull_request.mergeable !== null
+
+  while (!mergeabilityResolved && retryCount < 5) {
+    try {
+      core.info(
+        `Pull request mergeability is not resolved. Retry count: ${retryCount}`
+      )
+
+      const { data } = await cmd.getPullRequest(
+        github,
+        repository,
+        pull_request
+      )
+
+      if (data.mergeable === null || data.mergeable === undefined) {
+        core.info(
+          `Pull request mergeability is not yet resolved... retrying in 5 seconds.`
+        )
+        retryCount++
+        await new Promise(resolve => setTimeout(resolve, 5000))
+      } else {
+        mergeabilityResolved = true
+      }
+    } catch (apiError) {
+      return {
+        execute: false,
+        validationState: state.skipped,
+        validationMessage: `An error occurred fetching the PR from Github: ${JSON.stringify(
+          apiError
+        )}`
+      }
     }
   }
 

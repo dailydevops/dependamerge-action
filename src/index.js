@@ -17,7 +17,7 @@ const outputMessage = 'message'
  */
 module.exports = async function run({ github, context, inputs, metadata }) {
   try {
-    if (github === null || github === undefined) {
+    if (!github) {
       const msg = 'No github provided!'
 
       core.setOutput(outputState, state.failed)
@@ -25,7 +25,7 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       return core.setFailed(msg)
     }
 
-    if (context === null || context === undefined) {
+    if (!context) {
       const msg = 'No context provided!'
 
       core.setOutput(outputState, state.failed)
@@ -33,7 +33,7 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       return core.setFailed(msg)
     }
 
-    if (inputs === null || inputs === undefined) {
+    if (!inputs) {
       const msg =
         'No inputs provided! Please validate your configuration, especially the properties `skip-commit-verification` and `skip-verification`.'
 
@@ -42,7 +42,7 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       return core.setFailed(msg)
     }
 
-    if (metadata === null || metadata === undefined) {
+    if (!metadata) {
       const msg =
         'No metadata provided! Please validate your configuration, especially the properties `skip-commit-verification` and `skip-verification`.'
 
@@ -50,6 +50,11 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       core.setOutput(outputMessage, msg)
       return core.setFailed(msg)
     }
+
+    core.debug(`GitHub: ${JSON.stringify(github, null, 2)}`)
+    core.debug(`Context: ${JSON.stringify(context, null, 2)}`)
+    core.debug(`Inputs: ${JSON.stringify(inputs, null, 2)}`)
+    core.debug(`Metadata: ${JSON.stringify(metadata, null, 2)}`)
 
     const config = {
       inputs: getInputs(inputs),
@@ -60,7 +65,7 @@ module.exports = async function run({ github, context, inputs, metadata }) {
     const { pull_request, repository } = context.payload
 
     const { execute, cmd, body, validationState, validationMessage } =
-      validatePullRequest(pull_request, config)
+      await validatePullRequest(github, repository, pull_request, config)
 
     core.setOutput(outputState, validationState)
     core.setOutput(outputMessage, validationMessage)

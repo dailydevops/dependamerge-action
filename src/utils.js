@@ -81,7 +81,7 @@ function getMetadata(metadata) {
   }
 }
 
-function validatePullRequest(pull_request, config) {
+async function validatePullRequest(github, repository, pull_request, config) {
   if (pull_request.state !== 'open' || pull_request.merged) {
     return {
       execute: false,
@@ -132,6 +132,41 @@ function validatePullRequest(pull_request, config) {
       validationState: state.skipped,
       validationMessage:
         'The pull-request is associated with a dependency group but the action is not configured to handle dependency groups.'
+    }
+  }
+
+  let retryCount = 0
+  let mergeabilityResolved = pull_request.mergeable !== null
+
+  while (!mergeabilityResolved && retryCount < 5) {
+    try {
+      core.info(
+        `Pull request mergeability is not resolved. Retry count: ${retryCount}`
+      )
+
+      const { data } = await cmd.getPullRequest(
+        github,
+        repository,
+        pull_request
+      )
+
+      if (data.mergeable === null || data.mergeable === undefined) {
+        core.info(
+          `Pull request mergeability is not yet resolved... retrying in 5 seconds.`
+        )
+        retryCount++
+        await new Promise(resolve => setTimeout(resolve, 5000))
+      } else {
+        mergeabilityResolved = true
+      }
+    } catch (apiError) {
+      return {
+        execute: false,
+        validationState: state.skipped,
+        validationMessage: `An error occurred fetching the PR from Github: ${JSON.stringify(
+          apiError
+        )}`
+      }
     }
   }
 
