@@ -1,7 +1,12 @@
 'use strict'
 
 const core = require('@actions/core')
-const cmd = require('./api')
+const {
+  addComment,
+  approvePullRequest,
+  comparePullRequest,
+  getPullRequest
+} = require('./api')
 
 const dependabotUser = 'dependabot[bot]'
 // const dependabotCommitter = 'GitHub'
@@ -135,6 +140,17 @@ async function validatePullRequest(github, repository, pull_request, config) {
     }
   }
 
+  const { data: compareData } = await comparePullRequest(github, repository, pull_request)
+  if (compareData && compareData.status === 'behind' && compareData.behind_by > 0) {
+    return {
+      execute: true,
+      body: `@dependabot ${commandText.rebase}`,
+      cmd: addComment,
+      validationState: state.rebased,
+      validationMessage: 'The pull request will be rebased.'
+    }
+  }
+
   let retryCount = 0
   let mergeabilityResolved = pull_request.mergeable !== null
 
@@ -144,13 +160,13 @@ async function validatePullRequest(github, repository, pull_request, config) {
         `Pull request mergeability is not resolved. Retry count: ${retryCount}`
       )
 
-      const { data } = await cmd.getPullRequest(
+      const { data: prData } = await getPullRequest(
         github,
         repository,
         pull_request
       )
 
-      if (data.mergeable === null || data.mergeable === undefined) {
+      if (prData.mergeable === null || prData.mergeable === undefined) {
         core.info(
           `Pull request mergeability is not yet resolved... retrying in 5 seconds.`
         )
@@ -174,7 +190,7 @@ async function validatePullRequest(github, repository, pull_request, config) {
     return {
       execute: true,
       body: `@dependabot ${commandText.rebase}`,
-      cmd: cmd.addComment,
+      cmd: addComment,
       validationState: state.rebased,
       validationMessage: 'The pull request will be rebased.'
     }
@@ -216,7 +232,7 @@ async function validatePullRequest(github, repository, pull_request, config) {
     return {
       execute: true,
       body: 'Approved by DependaMerge.',
-      cmd: cmd.approvePullRequest,
+      cmd: approvePullRequest,
       validationState: state.approved,
       validationMessage: 'The pull request will be approved.'
     }
@@ -225,7 +241,7 @@ async function validatePullRequest(github, repository, pull_request, config) {
   return {
     execute: true,
     body: `@dependabot ${config.inputs.commandMethod}`,
-    cmd: cmd.approvePullRequest,
+    cmd: approvePullRequest,
     validationState: state.merged,
     validationMessage: 'The pull request will be merged.'
   }
