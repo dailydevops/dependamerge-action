@@ -51,10 +51,12 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       return core.setFailed(msg)
     }
 
+    core.startGroup('Input Values')
     core.debug(`GitHub: ${JSON.stringify(github, null, 2)}`)
     core.debug(`Context: ${JSON.stringify(context, null, 2)}`)
     core.debug(`Inputs: ${JSON.stringify(inputs, null, 2)}`)
     core.debug(`Metadata: ${JSON.stringify(metadata, null, 2)}`)
+    core.endGroup()
 
     const config = {
       inputs: getInputs(inputs),
