@@ -46,6 +46,7 @@ jobs:
   test-action:
     name: GitHub Actions Test
     runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
 
     steps:
       - name: Checkout
@@ -56,6 +57,8 @@ jobs:
         uses: ./
         with:
           token: ${{ secrets.DEPENDABOT }}
+          command: squash
           handle-submodule: true
+          target: minor
 
 
