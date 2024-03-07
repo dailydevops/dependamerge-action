@@ -24941,12 +24941,11 @@ async function approvePullRequest(github, repo, pull_request, body) {
   })
 }
 
-async function comparePullRequestToBase(github, repo, pull_request) {
-  return await github.rest.repos.compareCommits({
+async function comparePullRequest(github, repo, pull_request) {
+  return await github.rest.repos.compare({
     owner: repo.owner.login,
     repo: repo.name,
-    base: pull_request.base.ref,
-    head: pull_request.head.ref
+    basehead: `${pull_request.base.ref}...${pull_request.head.ref}`
   })
 }
 
@@ -24961,6 +24960,7 @@ async function getPullRequest(github, repo, pull_request) {
 module.exports = {
   addComment,
   approvePullRequest,
+  comparePullRequest,
   getPullRequest
 }
 
@@ -25067,7 +25067,12 @@ module.exports = async function run({ github, context, inputs, metadata }) {
 
 
 const core = __nccwpck_require__(2186)
-const cmd = __nccwpck_require__(612)
+const {
+  addComment,
+  approvePullRequest,
+  comparePullRequest,
+  getPullRequest
+} = __nccwpck_require__(612)
 
 const dependabotUser = 'dependabot[bot]'
 // const dependabotCommitter = 'GitHub'
@@ -25148,180 +25153,171 @@ function getMetadata(metadata) {
 }
 
 async function validatePullRequest(github, repository, pull_request, config) {
-  core.startGroup('Validate Pull Request')
-  try {
-    if (pull_request.state !== 'open' || pull_request.merged) {
-      return {
-        execute: false,
-        validationState: state.skipped,
-        validationMessage: 'Pull request is not open or already merged.'
-      }
-    }
-
-    if (pull_request.draft) {
-      return {
-        execute: false,
-        validationState: state.skipped,
-        validationMessage: 'Pull request is a draft.'
-      }
-    }
-
-    if (
-      !config.inputs.skipVerification &&
-      pull_request.user.login !== dependabotUser
-    ) {
-      return {
-        execute: false,
-        validationState: state.skipped,
-        validationMessage: `The Commit/PullRequest was not created by ${dependabotUser}.`
-      }
-    }
-
-    let targetUpdateType = config.inputs.target
-    if (config.metadata.ecosystem === 'gitsubmodule') {
-      if (!config.inputs.handleSubmodule) {
-        return {
-          execute: false,
-          validationState: state.skipped,
-          validationMessage:
-            'The pull-request is associated with a submodule but the action is not configured to handle submodules.'
-        }
-      } else {
-        targetUpdateType = updateTypes.any
-      }
-    }
-
-    if (
-      !config.inputs.handleDependencyGroup &&
-      config.metadata.dependecyGroup !== ''
-    ) {
-      return {
-        execute: false,
-        validationState: state.skipped,
-        validationMessage:
-          'The pull-request is associated with a dependency group but the action is not configured to handle dependency groups.'
-      }
-    }
-
-    const { data: compareData } = await cmd.comparePullRequestToBase(
-      github,
-      repository,
-      pull_request
-    )
-    if (compareData.status === 'behind' && compareData.behind_by > 0) {
-      return {
-        execute: true,
-        body: `@dependabot ${commandText.rebase}`,
-        cmd: cmd.addComment,
-        validationState: state.rebased,
-        validationMessage: 'The pull request will be rebased.'
-      }
-    }
-
-    let retryCount = 0
-    let mergeabilityResolved = pull_request.mergeable !== null
-
-    while (!mergeabilityResolved && retryCount < 5) {
-      try {
-        core.info(
-          `Pull request mergeability is not resolved. Retry count: ${retryCount}`
-        )
-
-        const { data: prData } = await cmd.getPullRequest(
-          github,
-          repository,
-          pull_request
-        )
-
-        if (prData.mergeable === null || prData.mergeable === undefined) {
-          core.info(
-            `Pull request mergeability is not yet resolved... retrying in 5 seconds.`
-          )
-          retryCount++
-          await new Promise(resolve => setTimeout(resolve, 5000))
-        } else {
-          mergeabilityResolved = true
-        }
-      } catch (apiError) {
-        return {
-          execute: false,
-          validationState: state.skipped,
-          validationMessage: `An error occurred fetching the PR from Github: ${JSON.stringify(
-            apiError
-          )}`
-        }
-      }
-    }
-
-    if (pull_request.mergeable_state === 'behind') {
-      return {
-        execute: true,
-        body: `@dependabot ${commandText.rebase}`,
-        cmd: cmd.addComment,
-        validationState: state.rebased,
-        validationMessage: 'The pull request will be rebased.'
-      }
-    }
-
-    if (
-      pull_request.mergeable_state === 'blocked' ||
-      pull_request.mergeable_state === 'dirty'
-    ) {
-      core.info(
-        `Pull request merge is blocked by conflicts. State: ${pull_request.mergeable_state}`
-      )
-      return {
-        execute: false,
-        validationState: state.skipped,
-        validationMessage:
-          'Pull request merge is blocked by conflicts, please resolve them manually.'
-      }
-    }
-
-    const treatVersion =
-      targetUpdateType === updateTypes.any ||
-      updateTypesPriority.indexOf(config.metadata.updateType) <=
-        updateTypesPriority.indexOf(targetUpdateType)
-
-    core.info(
-      `Check package '${config.metadata.dependecyNames}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
-    )
-    core.info(`Is the package version treated? - ${treatVersion}`)
-    if (!treatVersion) {
-      return {
-        execute: false,
-        validationState: state.skipped,
-        validationMessage: `The package version is not treated by the action.`
-      }
-    }
-
-    if (config.inputs.approveOnly) {
-      return {
-        execute: true,
-        body: 'Approved by DependaMerge.',
-        cmd: cmd.approvePullRequest,
-        validationState: state.approved,
-        validationMessage: 'The pull request will be approved.'
-      }
-    }
-
-    return {
-      execute: true,
-      body: `@dependabot ${config.inputs.commandMethod}`,
-      cmd: cmd.approvePullRequest,
-      validationState: state.merged,
-      validationMessage: 'The pull request will be merged.'
-    }
-  } catch (validationError) {
+  if (pull_request.state !== 'open' || pull_request.merged) {
     return {
       execute: false,
-      validationState: state.failed,
-      validationMessage: `An error occurred validating the PR: ${JSON.stringify(
-        validationError
-      )}`
+      validationState: state.skipped,
+      validationMessage: 'Pull request is not open or already merged.'
     }
-  } finally {
-    core.endGroup()
+  }
+
+  if (pull_request.draft) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage: 'Pull request is a draft.'
+    }
+  }
+
+  if (
+    !config.inputs.skipVerification &&
+    pull_request.user.login !== dependabotUser
+  ) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage: `The Commit/PullRequest was not created by ${dependabotUser}.`
+    }
+  }
+
+  let targetUpdateType = config.inputs.target
+  if (config.metadata.ecosystem === 'gitsubmodule') {
+    if (!config.inputs.handleSubmodule) {
+      return {
+        execute: false,
+        validationState: state.skipped,
+        validationMessage:
+          'The pull-request is associated with a submodule but the action is not configured to handle submodules.'
+      }
+    } else {
+      targetUpdateType = updateTypes.any
+    }
+  }
+
+  if (
+    !config.inputs.handleDependencyGroup &&
+    config.metadata.dependecyGroup !== ''
+  ) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage:
+        'The pull-request is associated with a dependency group but the action is not configured to handle dependency groups.'
+    }
+  }
+
+  const { data: compareData } = await comparePullRequest(
+    github,
+    repository,
+    pull_request
+  )
+  if (
+    compareData &&
+    compareData.status === 'behind' &&
+    compareData.behind_by > 0
+  ) {
+    return {
+      execute: true,
+      body: `@dependabot ${commandText.rebase}`,
+      cmd: addComment,
+      validationState: state.rebased,
+      validationMessage: 'The pull request will be rebased.'
+    }
+  }
+
+  let retryCount = 0
+  let mergeabilityResolved = pull_request.mergeable !== null
+
+  while (!mergeabilityResolved && retryCount < 5) {
+    try {
+      core.info(
+        `Pull request mergeability is not resolved. Retry count: ${retryCount}`
+      )
+
+      const { data: prData } = await getPullRequest(
+        github,
+        repository,
+        pull_request
+      )
+
+      if (prData.mergeable === null || prData.mergeable === undefined) {
+        core.info(
+          `Pull request mergeability is not yet resolved... retrying in 5 seconds.`
+        )
+        retryCount++
+        await new Promise(resolve => setTimeout(resolve, 5000))
+      } else {
+        mergeabilityResolved = true
+      }
+    } catch (apiError) {
+      return {
+        execute: false,
+        validationState: state.skipped,
+        validationMessage: `An error occurred fetching the PR from Github: ${JSON.stringify(
+          apiError
+        )}`
+      }
+    }
+  }
+
+  if (pull_request.mergeable_state === 'behind') {
+    return {
+      execute: true,
+      body: `@dependabot ${commandText.rebase}`,
+      cmd: addComment,
+      validationState: state.rebased,
+      validationMessage: 'The pull request will be rebased.'
+    }
+  }
+
+  if (
+    pull_request.mergeable_state === 'blocked' ||
+    pull_request.mergeable_state === 'dirty'
+  ) {
+    core.info(
+      `Pull request merge is blocked by conflicts. State: ${pull_request.mergeable_state}`
+    )
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage:
+        'Pull request merge is blocked by conflicts, please resolve them manually.'
+    }
+  }
+
+  const treatVersion =
+    targetUpdateType === updateTypes.any ||
+    updateTypesPriority.indexOf(config.metadata.updateType) <=
+      updateTypesPriority.indexOf(targetUpdateType)
+
+  core.info(
+    `Check package '${config.metadata.dependecyNames}' - Old: '${config.metadata.previousVersion}' New: '${config.metadata.newVersion}'`
+  )
+  core.info(`Is the package version treated? - ${treatVersion}`)
+  if (!treatVersion) {
+    return {
+      execute: false,
+      validationState: state.skipped,
+      validationMessage: `The package version is not treated by the action.`
+    }
+  }
+
+  if (config.inputs.approveOnly) {
+    return {
+      execute: true,
+      body: 'Approved by DependaMerge.',
+      cmd: approvePullRequest,
+      validationState: state.approved,
+      validationMessage: 'The pull request will be approved.'
+    }
+  }
+
+  return {
+    execute: true,
+    body: `@dependabot ${config.inputs.commandMethod}`,
+    cmd: approvePullRequest,
+    validationState: state.merged,
+    validationMessage: 'The pull request will be merged.'
   }
 }
 

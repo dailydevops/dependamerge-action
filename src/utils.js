@@ -140,8 +140,16 @@ async function validatePullRequest(github, repository, pull_request, config) {
     }
   }
 
-  const { data: compareData } = await comparePullRequest(github, repository, pull_request)
-  if (compareData && compareData.status === 'behind' && compareData.behind_by > 0) {
+  const { data: compareData } = await comparePullRequest(
+    github,
+    repository,
+    pull_request
+  )
+  if (
+    compareData &&
+    compareData.status === 'behind' &&
+    compareData.behind_by > 0
+  ) {
     return {
       execute: true,
       body: `@dependabot ${commandText.rebase}`,

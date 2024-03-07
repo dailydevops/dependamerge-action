@@ -8,7 +8,7 @@ const basePullRequest = {
   base: {
     ref: ''
   },
-  head:{
+  head: {
     ref: ''
   }
 }
@@ -17,14 +17,14 @@ const mockCompare = jest.fn()
 mockCompare.mockReturnValue({
   data: {
     status: 'before',
-    'behind_by': 0
+    behind_by: 0
   }
 })
 
 const mockGetPullRequest = jest.fn()
 mockGetPullRequest.mockReturnValue({
   data: {
-    mergeable: true,
+    mergeable: true
   }
 })
 // Mock for the object `github` that is passed to the action
@@ -341,15 +341,15 @@ describe('Tests for `validatePullRequest` function', () => {
       'The pull-request is associated with a dependency group but the action is not configured to handle dependency groups.'
     )
   })
-  
+
   test('should return `true` after compare commits', async () => {
     mockCompare.mockReturnValueOnce({
       data: {
         status: 'behind',
-        'behind_by': 2
+        behind_by: 2
       }
     })
-    
+
     const pullRequest = {
       ...basePullRequest,
       merged: false,
