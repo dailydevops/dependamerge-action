@@ -158,6 +158,7 @@ jobs:
       - lint
       - test-javascript
     if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'push' && github.ref == 'refs/heads/main'}}
+    permissions: write-all
 
     steps:
     - name: Checkout repository
