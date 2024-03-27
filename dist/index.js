@@ -24730,6 +24730,14 @@ async function approvePullRequest(github, repo, pull_request, body) {
   })
 }
 
+async function comparePullRequest(github, repo, pull_request) {
+  return await github.rest.repos.compare({
+    owner: repo.owner.login,
+    repo: repo.name,
+    basehead: `${pull_request.base.ref}...${pull_request.head.ref}`
+  })
+}
+
 async function getPullRequest(github, repo, pull_request) {
   return await github.rest.pulls.get({
     owner: repo.owner.login,
@@ -24741,6 +24749,7 @@ async function getPullRequest(github, repo, pull_request) {
 module.exports = {
   addComment,
   approvePullRequest,
+  comparePullRequest,
   getPullRequest
 }
 
@@ -24804,10 +24813,12 @@ module.exports = async function run({ github, context, inputs, metadata }) {
       return core.setFailed(msg)
     }
 
+    core.startGroup('Input Values')
     core.debug(`GitHub: ${JSON.stringify(github, null, 2)}`)
     core.debug(`Context: ${JSON.stringify(context, null, 2)}`)
     core.debug(`Inputs: ${JSON.stringify(inputs, null, 2)}`)
     core.debug(`Metadata: ${JSON.stringify(metadata, null, 2)}`)
+    core.endGroup()
 
     const config = {
       inputs: getInputs(inputs),
@@ -24845,7 +24856,12 @@ module.exports = async function run({ github, context, inputs, metadata }) {
 
 
 const core = __nccwpck_require__(2186)
-const cmd = __nccwpck_require__(612)
+const {
+  addComment,
+  approvePullRequest,
+  comparePullRequest,
+  getPullRequest
+} = __nccwpck_require__(612)
 
 const dependabotUser = 'dependabot[bot]'
 // const dependabotCommitter = 'GitHub'
@@ -24979,6 +24995,25 @@ async function validatePullRequest(github, repository, pull_request, config) {
     }
   }
 
+  const { data: compareData } = await comparePullRequest(
+    github,
+    repository,
+    pull_request
+  )
+  if (
+    compareData &&
+    compareData.status === 'behind' &&
+    compareData.behind_by > 0
+  ) {
+    return {
+      execute: true,
+      body: `@dependabot ${commandText.rebase}`,
+      cmd: addComment,
+      validationState: state.rebased,
+      validationMessage: 'The pull request will be rebased.'
+    }
+  }
+
   let retryCount = 0
   let mergeabilityResolved = pull_request.mergeable !== null
 
@@ -24988,13 +25023,13 @@ async function validatePullRequest(github, repository, pull_request, config) {
         `Pull request mergeability is not resolved. Retry count: ${retryCount}`
       )
 
-      const { data } = await cmd.getPullRequest(
+      const { data: prData } = await getPullRequest(
         github,
         repository,
         pull_request
       )
 
-      if (data.mergeable === null || data.mergeable === undefined) {
+      if (prData.mergeable === null || prData.mergeable === undefined) {
         core.info(
           `Pull request mergeability is not yet resolved... retrying in 5 seconds.`
         )
@@ -25018,7 +25053,7 @@ async function validatePullRequest(github, repository, pull_request, config) {
     return {
       execute: true,
       body: `@dependabot ${commandText.rebase}`,
-      cmd: cmd.addComment,
+      cmd: addComment,
       validationState: state.rebased,
       validationMessage: 'The pull request will be rebased.'
     }
@@ -25060,7 +25095,7 @@ async function validatePullRequest(github, repository, pull_request, config) {
     return {
       execute: true,
       body: 'Approved by DependaMerge.',
-      cmd: cmd.approvePullRequest,
+      cmd: approvePullRequest,
       validationState: state.approved,
       validationMessage: 'The pull request will be approved.'
     }
@@ -25069,7 +25104,7 @@ async function validatePullRequest(github, repository, pull_request, config) {
   return {
     execute: true,
     body: `@dependabot ${config.inputs.commandMethod}`,
-    cmd: cmd.approvePullRequest,
+    cmd: approvePullRequest,
     validationState: state.merged,
     validationMessage: 'The pull request will be merged.'
   }
