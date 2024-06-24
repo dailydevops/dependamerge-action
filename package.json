@@ -1,7 +1,7 @@
 {
   "name": "dependamerge-action",
   "description": "GitHub action that automatically validates, approves and merges pull requests for branches created by dependabot[bot].",
-  "version": "1.0.3",
+  "version": "1.1.1",
   "author": "dailydevops",
   "private": true,
   "homepage": "https://github.com/dailydevops/dependamerge-action#readme",
