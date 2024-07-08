@@ -1,6 +1,6 @@
 # DependaMerge - GitHub Action
 
-GitHub action that processes pull requests created and processed by [dependabot[bot]](https://github.com/dependabot). Depending on the settings, the pull request is approved and/or merged.
+GitHub Action that processes pull requests created and processed by [dependabot[bot]](https://github.com/dependabot). Depending on the settings, the pull request is approved and/or merged.
 The action is triggered by the `pull_request` event and only processes pull requests created by [dependabot[bot]](https://github.com/dependabot).
 
 ## Usage
