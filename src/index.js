@@ -71,12 +71,12 @@ module.exports = async function run({ github, context, inputs, metadata }) {
 
     core.setOutput(outputState, validationState)
     core.setOutput(outputMessage, validationMessage)
+
     if (execute) {
       await cmd(github, repository, pull_request, body)
-      return core.info(validationMessage)
-    } else {
-      return core.info(validationMessage)
     }
+
+    return core.info(validationMessage)
   } catch (error) {
     core.setOutput(outputState, state.failed)
     core.setOutput(outputMessage, error.message)

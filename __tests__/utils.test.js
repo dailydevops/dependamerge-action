@@ -54,6 +54,7 @@ const repository = {
 describe('Tests for `getInputs` function', () => {
   test.each([
     ['merge', 'merge'],
+    ['rebase', 'rebase'],
     ['squash', 'squash and merge'],
     [undefined, 'squash and merge']
   ])('input command `%s` should return `%s`', (command, expected) => {
