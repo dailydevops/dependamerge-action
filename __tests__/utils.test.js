@@ -366,6 +366,7 @@ describe('Tests for `validatePullRequest` function', () => {
     const config = {
       inputs: {
         approveOnly: false,
+        command: 'rebase',
         handleSubmodule: true,
         handleDependencyGroup: true
       },
@@ -384,6 +385,48 @@ describe('Tests for `validatePullRequest` function', () => {
     expect(result.validationState).toBe(state.rebased)
     expect(result.validationMessage).toBe('The pull request will be rebased.')
   })
+
+  test('should return `false` when compare commits is not behind', async () => {
+    mockCompare.mockReturnValueOnce({
+      data: {
+        status: 'clean',
+        behind_by: 0
+      }
+    })
+
+    const pullRequest = {
+      ...basePullRequest,
+      merged: false,
+      state: 'open',
+      draft: false,
+      user: {
+        login: 'dependabot[bot]'
+      }
+    }
+
+    const config = {
+      inputs: {
+        approveOnly: false,
+        command: 'rebase',
+        handleSubmodule: true,
+        handleDependencyGroup: true
+      },
+      metadata: {}
+    }
+
+    const result = await validatePullRequest(
+      github,
+      repository,
+      pullRequest,
+      config
+    )
+
+    expect(result.execute).toBe(false)
+    expect(result.validationState).toBe(state.skipped)
+    expect(result.validationMessage).toBe(
+      `The pull request is not behind the target branch.`
+    )
+  }, 15000)
 
   test('should return `true` when pull request has a mergeable state of `null`', async () => {
     mockGetPullRequest.mockReturnValueOnce({
