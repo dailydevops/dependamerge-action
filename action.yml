@@ -1,5 +1,7 @@
 name: 'DependaMerge'
-description: 'Automatic validation, approval and merging of pull requests, created and processed by dependabot[bot]'
+description:
+  'Automatic validation, approval and merging of pull requests, created and
+  processed by dependabot[bot]'
 author: 'Daily DevOps & .NET'
 branding:
   icon: 'package'
@@ -12,27 +14,37 @@ inputs:
     required: true
 
   approve-only:
-    description: 'Only approve the pull-request. Valid values: true or false - Default: false'
+    description:
+      'Only approve the pull-request. Valid values: true or false - Default:
+      false'
     required: false
     default: false
 
   command:
-    description: 'The command to pass to Dependabot. Valid values: merge or squash - Default: squash'
+    description:
+      'The command to pass to Dependabot. Valid values: merge or squash -
+      Default: squash'
     required: false
     default: squash
 
   handle-submodule:
-    description: 'If true, the action will merge pull-requests with submodule updates. Valid values: true or false - Default: false'
+    description:
+      'If true, the action will merge pull-requests with submodule updates.
+      Valid values: true or false - Default: false'
     required: false
     default: false
 
   handle-dependency-group:
-    description: 'If true, the action will merge dependency group pull-requests. Valid values: true or false - Default: false'
+    description:
+      'If true, the action will merge dependency group pull-requests. Valid
+      values: true or false - Default: false'
     required: false
     default: true
-  
+
   target:
-    description: 'The version comparision target. Valid values: major, minor, patch, any - Default: patch'
+    description:
+      'The version comparision target. Valid values: major, minor, patch, any -
+      Default: patch'
 
     required: false
     default: patch
@@ -43,9 +55,11 @@ inputs:
       It is required to set this to true in GitHub Enterprise Server.
     required: false
     default: false
-    
+
   skip-verification:
-    description: 'If true, the action will not validate the user or the commit verification status.'
+    description:
+      'If true, the action will not validate the user or the commit verification
+      status.'
     required: false
     default: false
 
@@ -55,7 +69,9 @@ outputs:
     description: 'The state of the pull-request after the action has completed.'
     value: ${{ steps.dependamerge.outputs.state }}
   message:
-    description: 'More information about the state of the pull-request after the action has completed.'
+    description:
+      'More information about the state of the pull-request after the action has
+      completed.'
     value: ${{ steps.dependamerge.outputs.message }}
 
 runs:
@@ -72,14 +88,14 @@ runs:
         alert-lookup: true
         compat-lookup: true
         skip-commit-verification: ${{ inputs.skip-commit-verification }}
-        skip-verification :  ${{ inputs.skip-verification }}
+        skip-verification: ${{ inputs.skip-verification }}
 
     - name: DependaMerge
       id: dependamerge
       uses: actions/github-script@v7.0.1
       if: |
         github.event_name == 'pull_request' &&
-        (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]' || inputs.skip-verification)  
+        (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]' || inputs.skip-verification)
       with:
         github-token: ${{ inputs.token }}
         script: |

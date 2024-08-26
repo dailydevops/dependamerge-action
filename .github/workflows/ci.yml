@@ -118,7 +118,7 @@ jobs:
 
       - name: Lint Codebase
         id: super-linter
-        uses: super-linter/super-linter/slim@v6
+        uses: super-linter/super-linter/slim@v7
         env:
           DEFAULT_BRANCH: main
           FILTER_REGEX_EXCLUDE: dist/**/*
@@ -127,7 +127,8 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_MARKDOWN: false
           VALIDATE_JSCPD: false
-          
+          VALIDATE_JAVASCRIPT_STANDARD: false
+
   test-action:
     name: GitHub Actions Test
     runs-on: ubuntu-latest
@@ -157,39 +158,39 @@ jobs:
       - check-dist
       - lint
       - test-javascript
-    if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'push' && github.ref == 'refs/heads/main'}}
+    if:
+      ${{ github.actor != 'dependabot[bot]' && github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'}}
     permissions: write-all
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        submodules: recursive
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.x
-        dotnet-quality: ga
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+          dotnet-quality: ga
 
-    - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v3.0.0
-      with:
-        versionSpec: '5.x'
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v3.0.0
+        with:
+          versionSpec: '5.x'
 
-    - name: Determine Version
-      id:   gitversion
-      uses: gittools/actions/gitversion/execute@v3.0.0
-      with:
-        useConfigFile: true
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v3.0.0
+        with:
+          useConfigFile: true
 
-    - name: Create Release
-      uses: release-drafter/release-drafter@v6.0.0
-      with:
-        version: ${{ steps.gitversion.outputs.fullSemVer }}
-        publish: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
+      - name: Create Release
+        uses: release-drafter/release-drafter@v6.0.0
+        with:
+          version: ${{ steps.gitversion.outputs.fullSemVer }}
+          publish: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
