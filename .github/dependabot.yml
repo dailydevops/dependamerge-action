@@ -5,15 +5,15 @@ updates:
     schedule:
       interval: weekly
     commit-message:
-      prefix: "build(ci)"
+      prefix: 'build(ci)'
     labels:
-      - "dependency-actions"
+      - 'dependency-actions'
 
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: daily
     commit-message:
-      prefix: "build(deps)"
+      prefix: 'build(deps)'
     labels:
-      - "dependency-npm"
+      - 'dependency-npm'
