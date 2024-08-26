@@ -28,7 +28,13 @@ jobs:
         uses: dailydevops/dependamerge-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          command: squash
+          command: squash # Not required, default is squash
+          approve-only: false # Not required, default is false
+          handle-submodule: false # Not required, default is false
+          handle-dependency-group: true # Not required, default is true
+          target: patch # Not required, default is patch
+          skip-commit-verification: false # Not required, default is false
+          skip-verification: false # Not required, default is false
 ```
 
 ### Inputs
