@@ -18,9 +18,9 @@ export default [
   {
     ignores: [
       '!**/.*',
-      '**/node_modules/.*',
-      '**/dist/.*',
-      '**/coverage/.*',
+      '**/node_modules/**/*',
+      '**/dist/**/*',
+      '**/coverage/**/*',
       '**/*.json'
     ]
   },
