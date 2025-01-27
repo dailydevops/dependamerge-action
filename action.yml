@@ -79,7 +79,7 @@ runs:
   steps:
     - name: Fetch metadata
       id: metadata
-      uses: dependabot/fetch-metadata@v2.2.0
+      uses: dependabot/fetch-metadata@v2.3.0
       if: |
         github.event_name == 'pull_request' &&
         (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]' || inputs.skip-verification)
