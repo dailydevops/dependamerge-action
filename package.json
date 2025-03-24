@@ -68,7 +68,7 @@
     "@babel/eslint-parser": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
     "@eslint/eslintrc": "^3.3.0",
-    "@eslint/js": "^9.22.0",
+    "@eslint/js": "^9.23.0",
     "@vercel/ncc": "^0.38.3",
     "babel-preset-jest": "^29.6.3",
     "eslint": "^9.22.0",
