@@ -159,7 +159,7 @@ jobs:
       - lint
       - test-javascript
     if:
-      ${{ github.actor != 'dependabot[bot]' && github.event_name == 'push' &&
+      ${{ github.actor != 'dependabot[bot]' &&
       github.ref == 'refs/heads/main'}}
     permissions: write-all
 
