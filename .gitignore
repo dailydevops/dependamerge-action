@@ -110,3 +110,5 @@ __tests__/runner/*
 *.userosscache
 *.sln.docstates
 *.userprefs
+# But keep dist-dotnet output
+!dist-dotnet/

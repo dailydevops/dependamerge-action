@@ -1,0 +1,104 @@
+name: 'DependaMerge'
+description:
+  'Automatic validation, approval and merging of pull requests, created and
+  processed by dependabot[bot]'
+author: 'Daily DevOps & .NET'
+branding:
+  icon: 'package'
+  color: 'purple'
+
+# Define your inputs here.
+inputs:
+  token:
+    description: 'The GitHub token used to merge the pull-request'
+    required: true
+
+  approve-only:
+    description:
+      'Only approve the pull-request. Valid values: true or false - Default:
+      false'
+    required: false
+    default: false
+
+  command:
+    description:
+      'The command to pass to Dependabot. Valid values: merge or squash -
+      Default: squash'
+    required: false
+    default: squash
+
+  handle-submodule:
+    description:
+      'If true, the action will merge pull-requests with submodule updates.
+      Valid values: true or false - Default: false'
+    required: false
+    default: false
+
+  handle-dependency-group:
+    description:
+      'If true, the action will merge dependency group pull-requests. Valid
+      values: true or false - Default: false'
+    required: false
+    default: true
+
+  target:
+    description:
+      'The version comparision target. Valid values: major, minor, patch, any -
+      Default: patch'
+
+    required: false
+    default: patch
+
+  skip-commit-verification:
+    description: |
+      If true, then the action will not expect the commits to have a verification signature.
+      It is required to set this to true in GitHub Enterprise Server.
+    required: false
+    default: false
+
+  skip-verification:
+    description:
+      'If true, the action will not validate the user or the commit verification
+      status.'
+    required: false
+    default: false
+
+# Define your outputs here.
+outputs:
+  state:
+    description: 'The state of the pull-request after the action has completed.'
+    value: ${{ steps.dependamerge.outputs.state }}
+  message:
+    description:
+      'More information about the state of the pull-request after the action has
+      completed.'
+    value: ${{ steps.dependamerge.outputs.message }}
+
+runs:
+  using: composite
+  steps:
+    - name: Fetch metadata
+      id: metadata
+      uses: dependabot/fetch-metadata@v2.4.0
+      if: |
+        github.event_name == 'pull_request' &&
+        (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]' || inputs.skip-verification)
+      with:
+        github-token: ${{ inputs.token }}
+        alert-lookup: true
+        compat-lookup: true
+        skip-commit-verification: ${{ inputs.skip-commit-verification }}
+        skip-verification: ${{ inputs.skip-verification }}
+
+    - name: DependaMerge (.NET)
+      id: dependamerge
+      shell: bash
+      if: |
+        github.event_name == 'pull_request' &&
+        (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]' || inputs.skip-verification)
+      env:
+        GITHUB_CONTEXT: ${{ toJSON(github) }}
+        INPUT_DATA: ${{ toJSON(inputs) }}
+        METADATA: ${{ toJSON(steps.metadata.outputs) }}
+      run: |
+        ${{ github.action_path }}/dist-dotnet/DependaMerge.Action
