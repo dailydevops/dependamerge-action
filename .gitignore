@@ -101,3 +101,12 @@ __tests__/runner/*
 .idea
 .vscode
 *.code-workspace
+
+# .NET build artifacts
+**/bin/
+**/obj/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
