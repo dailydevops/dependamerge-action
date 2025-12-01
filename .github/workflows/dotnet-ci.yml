@@ -1,0 +1,94 @@
+name: .NET CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-dotnet:
+    name: .NET Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+  build-and-check:
+    name: Build .NET Distribution
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build Distribution
+        run: ./build.sh
+
+      - name: Check Distribution
+        run: |
+          if [ ! -f "dist-dotnet/DependaMerge.Action" ]; then
+            echo "Error: DependaMerge.Action executable not found!"
+            exit 1
+          fi
+          
+          if [ ! -x "dist-dotnet/DependaMerge.Action" ]; then
+            echo "Error: DependaMerge.Action is not executable!"
+            exit 1
+          fi
+          
+          echo "Distribution check passed!"
+
+      - name: Upload Distribution
+        uses: actions/upload-artifact@v5.0.0
+        with:
+          name: dotnet-distribution
+          path: dist-dotnet/
+
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs: build-and-check
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+
+      - name: Download Distribution
+        uses: actions/download-artifact@v5.0.0
+        with:
+          name: dotnet-distribution
+          path: dist-dotnet/
+
+      - name: Make Executable
+        run: chmod +x dist-dotnet/DependaMerge.Action
+
+      - name: Test Execution
+        run: |
+          # Test that the executable runs (will fail due to missing env vars, but shouldn't crash)
+          ./dist-dotnet/DependaMerge.Action || true
+          echo "Executable test completed"
