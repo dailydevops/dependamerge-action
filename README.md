@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: DependaMerge
-        uses: dailydevops/dependamerge-action@v1
+        uses: dailydevops/action-dependamerge@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           command: squash # Not required, default is squash

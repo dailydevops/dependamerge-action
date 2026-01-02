@@ -4,13 +4,13 @@
   "version": "1.1.1",
   "author": "dailydevops",
   "private": true,
-  "homepage": "https://github.com/dailydevops/dependamerge-action#readme",
+  "homepage": "https://github.com/dailydevops/action-dependamerge#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dailydevops/dependamerge-action.git"
+    "url": "git+https://github.com/dailydevops/action-dependamerge.git"
   },
   "bugs": {
-    "url": "https://github.com/dailydevops/dependamerge-action/issues"
+    "url": "https://github.com/dailydevops/action-dependamerge/issues"
   },
   "keywords": [
     "GitHub",
