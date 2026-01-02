@@ -79,7 +79,7 @@ runs:
   steps:
     - name: Fetch metadata
       id: metadata
-      uses: dependabot/fetch-metadata@v2.4.0
+      uses: dependabot/fetch-metadata@08eff52bf64351f401fb50d4972fa95b9f2c2d1b # v2.4.0
       if: |
         github.event_name == 'pull_request' &&
         (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]' || inputs.skip-verification)
@@ -92,7 +92,7 @@ runs:
 
     - name: DependaMerge
       id: dependamerge
-      uses: actions/github-script@v8.0.0
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       if: |
         github.event_name == 'pull_request' &&
         (github.actor == 'dependabot[bot]' || github.triggering_actor == 'dependabot[bot]' || inputs.skip-verification)
