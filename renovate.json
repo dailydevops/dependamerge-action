@@ -1,0 +1,143 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    ":disableDependencyDashboard",
+    ":automergeMinor",
+    ":automergePatch",
+    ":rebaseStalePrs"
+  ],
+  "ignorePresets": [
+    "group:monorepos"
+  ],
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "enabledManagers": [
+    "custom.regex",
+    "dockerfile",
+    "github-actions",
+    "npm",
+    "nuget"
+  ],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/examples/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/__fixtures__/**"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/\\.(?:cs|fs|vb)proj$/",
+        "/\\.(?:props|targets)$/"
+      ],
+      "matchStrings": [
+        "<PackageReference\\s+Include=\"(?<depName>[^\"]+)\"\\s+Version=\"\\[(?<currentValue>[^,]+),.*\"",
+        "<Sdk\\s+Name=\"(?<depName>[^\"]+)\"\\s+Version=\"(?<currentValue>[^,]+)\"",
+        "<Project\\s+Sdk=\"(?<depName>[^\"]+)/(?<currentValue>[^,]+)\""
+      ],
+      "datasourceTemplate": "nuget",
+      "versioningTemplate": "nuget"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/\\.cs$/"
+      ],
+      "matchStrings": [
+        "/\\*\\s*dockerimage\\s*\\*/\\s*\"(?<depName>[^:]+):(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": [
+        "nuget",
+        "custom.regex"
+      ],
+      "labels": [
+        "dependency:nuget"
+      ],
+      "semanticCommits": "enabled",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "assignees": [
+        "samtrion"
+      ]
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "labels": [
+        "dependency:actions"
+      ],
+      "automerge": true,
+      "semanticCommits": "enabled",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "ci",
+      "assignees": [
+        "samtrion"
+      ]
+    },
+    {
+      "matchManagers": [
+        "npm"
+      ],
+      "labels": [
+        "dependency:npm"
+      ],
+      "semanticCommits": "enabled",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "assignees": [
+        "samtrion"
+      ]
+    },
+    {
+      "matchDatasources": [
+        "docker",
+        "custom.regex"
+      ],
+      "labels": [
+        "dependency:docker"
+      ],
+      "semanticCommits": "enabled",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "docker",
+      "assignees": [
+        "samtrion"
+      ]
+    },
+    {
+      "groupName": "Testcontainers packages",
+      "groupSlug": "testcontainers-packages",
+      "matchManagers": [
+        "nuget",
+        "custom.regex"
+      ],
+      "matchPackageNames": [
+        "Testcontainers",
+        "Testcontainers.*"
+      ]
+    },
+    {
+      "groupName": "TUnit packages",
+      "groupSlug": "tunit-packages",
+      "matchManagers": [
+        "nuget",
+        "custom.regex"
+      ],
+      "matchPackageNames": [
+        "TUnit",
+        "TUnit.*"
+      ]
+    }
+  ]
+}
