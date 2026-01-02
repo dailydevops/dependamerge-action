@@ -7,9 +7,7 @@
     ":automergePatch",
     ":rebaseStalePrs"
   ],
-  "ignorePresets": [
-    "group:monorepos"
-  ],
+  "ignorePresets": ["group:monorepos"],
   "automergeType": "pr",
   "automergeStrategy": "squash",
   "enabledManagers": [
@@ -45,9 +43,7 @@
     },
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "/\\.cs$/"
-      ],
+      "managerFilePatterns": ["/\\.cs$/"],
       "matchStrings": [
         "/\\*\\s*dockerimage\\s*\\*/\\s*\"(?<depName>[^:]+):(?<currentValue>[^\"]+)\""
       ],
@@ -57,87 +53,49 @@
   ],
   "packageRules": [
     {
-      "matchManagers": [
-        "nuget",
-        "custom.regex"
-      ],
-      "labels": [
-        "dependency:nuget"
-      ],
+      "matchManagers": ["nuget", "custom.regex"],
+      "labels": ["dependency:nuget"],
       "semanticCommits": "enabled",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps",
-      "assignees": [
-        "samtrion"
-      ]
+      "assignees": ["samtrion"]
     },
     {
-      "matchManagers": [
-        "github-actions"
-      ],
-      "labels": [
-        "dependency:actions"
-      ],
+      "matchManagers": ["github-actions"],
+      "labels": ["dependency:actions"],
       "automerge": true,
       "semanticCommits": "enabled",
       "semanticCommitType": "chore",
       "semanticCommitScope": "ci",
-      "assignees": [
-        "samtrion"
-      ]
+      "assignees": ["samtrion"]
     },
     {
-      "matchManagers": [
-        "npm"
-      ],
-      "labels": [
-        "dependency:npm"
-      ],
+      "matchManagers": ["npm"],
+      "labels": ["dependency:npm"],
       "semanticCommits": "enabled",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps",
-      "assignees": [
-        "samtrion"
-      ]
+      "assignees": ["samtrion"]
     },
     {
-      "matchDatasources": [
-        "docker",
-        "custom.regex"
-      ],
-      "labels": [
-        "dependency:docker"
-      ],
+      "matchDatasources": ["docker", "custom.regex"],
+      "labels": ["dependency:docker"],
       "semanticCommits": "enabled",
       "semanticCommitType": "chore",
       "semanticCommitScope": "docker",
-      "assignees": [
-        "samtrion"
-      ]
+      "assignees": ["samtrion"]
     },
     {
       "groupName": "Testcontainers packages",
       "groupSlug": "testcontainers-packages",
-      "matchManagers": [
-        "nuget",
-        "custom.regex"
-      ],
-      "matchPackageNames": [
-        "Testcontainers",
-        "Testcontainers.*"
-      ]
+      "matchManagers": ["nuget", "custom.regex"],
+      "matchPackageNames": ["Testcontainers", "Testcontainers.*"]
     },
     {
       "groupName": "TUnit packages",
       "groupSlug": "tunit-packages",
-      "matchManagers": [
-        "nuget",
-        "custom.regex"
-      ],
-      "matchPackageNames": [
-        "TUnit",
-        "TUnit.*"
-      ]
+      "matchManagers": ["nuget", "custom.regex"],
+      "matchPackageNames": ["TUnit", "TUnit.*"]
     }
   ]
 }
